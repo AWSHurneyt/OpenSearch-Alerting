@@ -113,7 +113,7 @@ class RestSearchMonitorAction(
         searchSourceBuilder.fetchSource(context(request))
 
         val queryBuilder = QueryBuilders.boolQuery().must(searchSourceBuilder.query())
-        queryBuilder.filter(QueryBuilders.existsQuery(Monitor.MONITOR_TYPE))
+//        queryBuilder.filter(QueryBuilders.existsQuery(Monitor.MONITOR_TYPE))
 
         searchSourceBuilder.query(queryBuilder)
             .seqNoAndPrimaryTerm(true)
