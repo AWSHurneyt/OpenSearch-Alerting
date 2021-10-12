@@ -91,7 +91,7 @@ class RestAcknowledgeAlertAction : BaseRestHandler() {
     }
 
     /**
-     * Parse the request content and return a list of the alert ids to acknowledge
+     * Parse twhe request content and return a list of the alert ids to acknowledge
      */
     private fun getAlertIds(xcp: XContentParser): List<String> {
         val ids = mutableListOf<String>()
@@ -108,6 +108,7 @@ class RestAcknowledgeAlertAction : BaseRestHandler() {
                 }
             }
         }
+        log.info("hurneyt ids = $ids")
         return ids
     }
 }
