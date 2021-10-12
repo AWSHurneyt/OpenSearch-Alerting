@@ -75,7 +75,13 @@ class TransportAcknowledgeAlertAction @Inject constructor(
             val searchRequest = SearchRequest()
                 .indices(AlertIndices.ALERT_INDEX)
                 .routing(request.monitorId)
-                .source(SearchSourceBuilder().query(queryBuilder).version(true).seqNoAndPrimaryTerm(true))
+                .source(
+                    SearchSourceBuilder()
+                        .query(queryBuilder)
+                        .version(true)
+                        .seqNoAndPrimaryTerm(true)
+                        .size(20)
+                )
 
             client.search(
                 searchRequest,
@@ -97,6 +103,7 @@ class TransportAcknowledgeAlertAction @Inject constructor(
                     xContentRegistry, LoggingDeprecationHandler.INSTANCE,
                     hit.sourceRef, XContentType.JSON
                 )
+                log.info("hurneyt response = $response")
                 XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.nextToken(), xcp)
                 val alert = Alert.parse(xcp, hit.id, hit.version)
                 alerts[alert.id] = alert
