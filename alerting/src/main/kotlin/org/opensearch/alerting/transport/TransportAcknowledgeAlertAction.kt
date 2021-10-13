@@ -80,7 +80,7 @@ class TransportAcknowledgeAlertAction @Inject constructor(
                         .query(queryBuilder)
                         .version(true)
                         .seqNoAndPrimaryTerm(true)
-                        .size(20)
+                        .size(request.alertIds.size)
                 )
 
             client.search(
@@ -103,7 +103,6 @@ class TransportAcknowledgeAlertAction @Inject constructor(
                     xContentRegistry, LoggingDeprecationHandler.INSTANCE,
                     hit.sourceRef, XContentType.JSON
                 )
-                log.info("hurneyt response = $response")
                 XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.nextToken(), xcp)
                 val alert = Alert.parse(xcp, hit.id, hit.version)
                 alerts[alert.id] = alert

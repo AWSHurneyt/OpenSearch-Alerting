@@ -108,7 +108,6 @@ class RestAcknowledgeAlertAction : BaseRestHandler() {
                 }
             }
         }
-        log.info("hurneyt ids = $ids")
         return ids
     }
 }
