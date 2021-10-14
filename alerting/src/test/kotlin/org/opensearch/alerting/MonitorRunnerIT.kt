@@ -1516,40 +1516,6 @@ class MonitorRunnerIT : AlertingRestTestCase() {
         }
     }
 
-    // TODO hurneyt: delete
-//    fun `test acknowledging more than 10 alerts`() {
-//        // GIVEN
-//        val monitor = createMonitor(randomBucketLevelMonitor())
-//
-//        val alerts = arrayOf(
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor)),
-//            createAlert(randomAlert(monitor))
-//        )
-//
-//        val numOfAlerts = alerts.size
-//
-//        // WHEN
-//        val result = acknowledgeAlerts(monitor, *alerts)
-//        logger.info("hurneyt numOfAlerts = $numOfAlerts")
-//        logger.info("hurneyt result = $result")
-//
-//        // THEN
-//        assertEquals(false, result.hasWarnings())
-//    }
-
     private fun prepareTestAnomalyResult(detectorId: String, user: User) {
         val adResultIndex = ".opendistro-anomaly-results-history-2020.10.17"
         try {

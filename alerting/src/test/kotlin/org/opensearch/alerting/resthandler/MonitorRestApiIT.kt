@@ -29,7 +29,6 @@ import org.apache.http.HttpHeaders
 import org.apache.http.entity.ContentType
 import org.apache.http.message.BasicHeader
 import org.apache.http.nio.entity.NStringEntity
-// import org.apache.logging.log4j.LogManager // TODO hurneyt: delete
 import org.opensearch.alerting.ALERTING_BASE_URI
 import org.opensearch.alerting.ANOMALY_DETECTOR_INDEX
 import org.opensearch.alerting.AlertingRestTestCase
@@ -79,7 +78,6 @@ import java.time.temporal.ChronoUnit
 @TestLogging("level:DEBUG", reason = "Debug for tests.")
 @Suppress("UNCHECKED_CAST")
 class MonitorRestApiIT : AlertingRestTestCase() {
-//    private val logger = LogManager.getLogger(MonitorRestApiIT::class.java) // TODO hurneyt: delete
 
     val USE_TYPED_KEYS = ToXContent.MapParams(mapOf("with_type" to "true"))
 
@@ -591,6 +589,7 @@ class MonitorRestApiIT : AlertingRestTestCase() {
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE))
         )
+        val numOfAlerts = alerts.size
 
         val response = acknowledgeAlerts(monitor, *alerts)
 
@@ -600,7 +599,7 @@ class MonitorRestApiIT : AlertingRestTestCase() {
                 "monitor = $monitor" +
                 "alerts = $alerts" +
                 "response = ${response.asMap()}",
-            acknowledgedAlerts.size == 15
+            acknowledgedAlerts.size == numOfAlerts - 1
         )
     }
 
