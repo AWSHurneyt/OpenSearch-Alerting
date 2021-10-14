@@ -683,11 +683,13 @@ class MonitorRestApiIT : AlertingRestTestCase() {
         val monitor = createRandomMonitor(refresh = true)
         val alertsToAcknowledge = arrayOf<Alert>()
 
-        // WHEN
-        acknowledgeAlerts(monitor, *alertsToAcknowledge)
-
-        // THEN
-        fail("You must provide at least one alert id.")
+        // WHEN & THEN
+        try {
+            acknowledgeAlerts(monitor, *alertsToAcknowledge)
+            fail("Expected acknowledgeAlerts to throw an exception.")
+        } catch (e: ResponseException) {
+            assertEquals("You must provide at least one alert id.", e)
+        }
     }
 
     fun `test get all alerts in all states`() {
