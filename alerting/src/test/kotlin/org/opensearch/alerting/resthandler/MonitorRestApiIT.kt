@@ -569,6 +569,33 @@ class MonitorRestApiIT : AlertingRestTestCase() {
         assertFalse("Alert in state ${activeAlert.state} found in failed list", failedResponseList.contains(activeAlert.id))
     }
 
+    fun `test acknowledge more than 10 alerts at once`() {
+        putAlertMappings() // Required as we do not have a create alert API.
+        val monitor = createRandomMonitor(refresh = true)
+        val alerts15 = arrayOf(
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE))
+        )
+
+        val response = acknowledgeAlerts(monitor, *alerts15)
+        val responseMap = response.asMap()
+
+        assertNotNull("Alert acknowledged time is NULL", responseMap)
+    }
+
     fun `test get all alerts in all states`() {
         putAlertMappings() // Required as we do not have a create alert API.
         val monitor = createRandomMonitor(refresh = true)
