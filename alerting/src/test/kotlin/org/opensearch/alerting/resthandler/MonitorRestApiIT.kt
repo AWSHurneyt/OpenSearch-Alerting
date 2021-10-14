@@ -572,9 +572,7 @@ class MonitorRestApiIT : AlertingRestTestCase() {
     fun `test acknowledge more than 10 alerts at once`() {
         putAlertMappings() // Required as we do not have a create alert API.
         val monitor = createRandomMonitor(refresh = true)
-
-        val response = acknowledgeAlerts(
-            monitor,
+        val alerts = arrayOf(
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
@@ -592,8 +590,16 @@ class MonitorRestApiIT : AlertingRestTestCase() {
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE))
         )
 
+        val response = acknowledgeAlerts(monitor, *alerts)
+
         val acknowledgedAlerts = response.asMap()["success"] as List<String>
-        assertTrue("Expected 15 alerts to be acknowledged successfully.", acknowledgedAlerts.size == 15)
+        assertTrue(
+            "Expected 15 alerts to be acknowledged successfully." +
+                "monitor = $monitor" +
+                "alerts = $alerts" +
+                "response = ${response.asMap()}",
+            acknowledgedAlerts.size == 15
+        )
     }
 
     fun `test get all alerts in all states`() {
