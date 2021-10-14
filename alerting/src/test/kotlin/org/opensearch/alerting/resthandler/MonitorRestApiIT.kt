@@ -573,7 +573,8 @@ class MonitorRestApiIT : AlertingRestTestCase() {
         putAlertMappings() // Required as we do not have a create alert API.
         val monitor = createRandomMonitor(refresh = true)
 
-        val response = acknowledgeAlerts(monitor,
+        val response = acknowledgeAlerts(
+            monitor,
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
