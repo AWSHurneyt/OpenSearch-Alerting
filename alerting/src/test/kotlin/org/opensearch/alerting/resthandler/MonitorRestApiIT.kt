@@ -688,7 +688,7 @@ class MonitorRestApiIT : AlertingRestTestCase() {
             acknowledgeAlerts(monitor, *alertsToAcknowledge)
             fail("Expected acknowledgeAlerts to throw an exception.")
         } catch (e: ResponseException) {
-            assertEquals("You must provide at least one alert id.", e.message)
+            assertEquals("Unexpected status", RestStatus.BAD_REQUEST, e.response.restStatus())
         }
     }
 
