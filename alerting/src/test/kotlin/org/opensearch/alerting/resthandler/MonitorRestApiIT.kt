@@ -594,13 +594,7 @@ class MonitorRestApiIT : AlertingRestTestCase() {
         val response = acknowledgeAlerts(monitor, *alerts)
 
         val acknowledgedAlerts = response.asMap()["success"] as List<String>
-        assertTrue(
-            "Expected 15 alerts to be acknowledged successfully." +
-                "monitor = $monitor" +
-                "alerts = $alerts" +
-                "response = ${response.asMap()}",
-            acknowledgedAlerts.size == numOfAlerts - 1
-        )
+        assertTrue("Expected $numOfAlerts alerts to be acknowledged successfully.", acknowledgedAlerts.size == numOfAlerts)
     }
 
     fun `test get all alerts in all states`() {
