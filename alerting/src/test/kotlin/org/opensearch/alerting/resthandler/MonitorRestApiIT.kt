@@ -10,7 +10,7 @@
  */
 
 /*
- *   Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *   Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License").
  *   You may not use this file except in compliance with the License.
@@ -569,10 +569,11 @@ class MonitorRestApiIT : AlertingRestTestCase() {
         assertFalse("Alert in state ${activeAlert.state} found in failed list", failedResponseList.contains(activeAlert.id))
     }
 
-    fun `test acknowledge more than 10 alerts at once`() {
+    fun `test acknowledging more than 10 alerts at once`() {
+        // GIVEN
         putAlertMappings() // Required as we do not have a create alert API.
         val monitor = createRandomMonitor(refresh = true)
-        val alerts = arrayOf(
+        val alertsToAcknowledge = arrayOf(
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
@@ -589,12 +590,104 @@ class MonitorRestApiIT : AlertingRestTestCase() {
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
             createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE))
         )
-        val numOfAlerts = alerts.size
 
-        val response = acknowledgeAlerts(monitor, *alerts)
+        // WHEN
+        val response = acknowledgeAlerts(monitor, *alertsToAcknowledge)
 
-        val acknowledgedAlerts = response.asMap()["success"] as List<String>
-        assertTrue("Expected $numOfAlerts alerts to be acknowledged successfully.", acknowledgedAlerts.size == numOfAlerts)
+        // THEN
+        val responseMap = response.asMap()
+        val expectedAcknowledgedCount = alertsToAcknowledge.size
+
+        val acknowledgedAlerts = responseMap["success"] as List<String>
+        assertTrue("Expected $expectedAcknowledgedCount alerts to be acknowledged successfully.", acknowledgedAlerts.size == expectedAcknowledgedCount)
+
+        val acknowledgedAlertsList = acknowledgedAlerts.toString()
+        alertsToAcknowledge.forEach { alert -> assertTrue("Alert with ID ${alert.id} not found in failed list.", acknowledgedAlertsList.contains(alert.id)) }
+
+        val failedResponse = responseMap["failed"] as List<String>
+        assertTrue("Expected 0 alerts to fail acknowledgment.", failedResponse.isEmpty())
+
+        val failedResponseList = failedResponse.toString()
+        alertsToAcknowledge.forEach { alert -> assertFalse("Alert with ID ${alert.id} found in failed list.", failedResponseList.contains(alert.id)) }
+    }
+
+    fun `test acknowledging more than 10 alerts at once, including acknowledged alerts`() {
+        // GIVEN
+        putAlertMappings() // Required as we do not have a create alert API.
+        val monitor = createRandomMonitor(refresh = true)
+        val alertsGroup1 = arrayOf(
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE))
+        )
+        acknowledgeAlerts(monitor, *alertsGroup1) // Acknowledging the first array of alerts.
+
+        val alertsGroup2 = arrayOf(
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)),
+            createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE))
+        )
+
+        val alertsToAcknowledge = arrayOf(*alertsGroup1, *alertsGroup2) // Creating an array of alerts that includes alerts that have been already acknowledged, and new alerts.
+
+        // WHEN
+        val response = acknowledgeAlerts(monitor, *alertsToAcknowledge)
+
+        // THEN
+        val responseMap = response.asMap()
+        val expectedAcknowledgedCount = alertsToAcknowledge.size - alertsGroup1.size
+
+        val acknowledgedAlerts = responseMap["success"] as List<String>
+        assertTrue("Expected $expectedAcknowledgedCount alerts to be acknowledged successfully.", acknowledgedAlerts.size == expectedAcknowledgedCount)
+
+        val acknowledgedAlertsList = acknowledgedAlerts.toString()
+        alertsGroup2.forEach { alert -> assertTrue("Alert with ID ${alert.id} not found in failed list.", acknowledgedAlertsList.contains(alert.id)) }
+        alertsGroup1.forEach { alert -> assertFalse("Alert with ID ${alert.id} found in failed list.", acknowledgedAlertsList.contains(alert.id)) }
+
+        val failedResponse = responseMap["failed"] as List<String>
+        assertTrue("Expected ${alertsGroup1.size} alerts to fail acknowledgment.", failedResponse.size == alertsGroup1.size)
+
+        val failedResponseList = failedResponse.toString()
+        alertsGroup1.forEach { alert -> assertTrue("Alert with ID ${alert.id} not found in failed list.", failedResponseList.contains(alert.id)) }
+        alertsGroup2.forEach { alert -> assertFalse("Alert with ID ${alert.id} found in failed list.", failedResponseList.contains(alert.id)) }
+    }
+
+    @Throws(Exception::class)
+    fun `test acknowledging 0 alerts`() {
+        // GIVEN
+        putAlertMappings() // Required as we do not have a create alert API.
+        val monitor = createRandomMonitor(refresh = true)
+        val alertsToAcknowledge = arrayOf<Alert>()
+
+        // WHEN
+        acknowledgeAlerts(monitor, *alertsToAcknowledge)
+
+        // THEN
+        fail("You must provide at least one alert id.")
     }
 
     fun `test get all alerts in all states`() {
