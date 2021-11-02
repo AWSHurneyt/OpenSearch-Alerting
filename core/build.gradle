@@ -10,7 +10,7 @@
  */
 
 /*
- *   Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *   Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *   
  *   Licensed under the Apache License, Version 2.0 (the "License").
  *   You may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ dependencies {
     compile "org.opensearch.client:opensearch-rest-client:${opensearch_version}"
     compile 'com.google.googlejavaformat:google-java-format:1.10.0'
     compile "org.opensearch:common-utils:${common_utils_version}"
+    compile 'commons-validator:commons-validator:1.7'
 
     testImplementation "org.opensearch.test:framework:${opensearch_version}"
     testImplementation "org.jetbrains.kotlin:kotlin-test:${kotlin_version}"

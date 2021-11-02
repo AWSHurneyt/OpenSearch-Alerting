@@ -10,7 +10,7 @@
  */
 
 /*
- *   Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *   Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License").
  *   You may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.opensearch.alerting.aggregation.bucketselectorext.BucketSelectorExtAg
 import org.opensearch.alerting.aggregation.bucketselectorext.BucketSelectorExtFilter
 import org.opensearch.alerting.core.model.Input
 import org.opensearch.alerting.core.model.IntervalSchedule
+import org.opensearch.alerting.core.model.LocalUriInput
 import org.opensearch.alerting.core.model.Schedule
 import org.opensearch.alerting.core.model.SearchInput
 import org.opensearch.alerting.elasticapi.string
@@ -356,6 +357,20 @@ fun randomQueryLevelTriggerRunResult(): QueryLevelTriggerRunResult {
     map.plus(Pair("key1", randomActionRunResult()))
     map.plus(Pair("key2", randomActionRunResult()))
     return QueryLevelTriggerRunResult("trigger-name", true, null, map)
+}
+
+fun randomLocalUriInput(
+    scheme: String = if (randomInt(3) >= 2) "http" else "https",
+    host: String = LocalUriInput.SUPPORTED_HOST,
+    port: Int = LocalUriInput.SUPPORTED_PORT,
+    path: String,
+    pathParams: String = "",
+    queryParams: Map<String, String> = hashMapOf(),
+    url: String = "",
+    connectionTimeout: Int = 1 + randomInt(LocalUriInput.MAX_CONNECTION_TIMEOUT - 1),
+    socketTimeout: Int = 1 + randomInt(LocalUriInput.MAX_SOCKET_TIMEOUT - 1)
+): LocalUriInput {
+    return LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
 }
 
 fun randomBucketLevelTriggerRunResult(): BucketLevelTriggerRunResult {
