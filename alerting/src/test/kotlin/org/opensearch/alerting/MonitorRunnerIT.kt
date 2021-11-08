@@ -840,10 +840,7 @@ class MonitorRunnerIT : AlertingRestTestCase() {
         // GIVEN
         val path = "/_cluster/health"
         val clusterIndex = randomInt(clusterHosts.size - 1)
-        val input = randomLocalUriInput(
-            scheme = clusterHosts[clusterIndex].schemeName,
-            path = path
-        )
+        val input = randomLocalUriInput(path = path)
         val monitor = createMonitor(randomQueryLevelMonitor(inputs = listOf(input)))
 
         // WHEN
@@ -867,10 +864,7 @@ class MonitorRunnerIT : AlertingRestTestCase() {
         // GIVEN
         val path = "/_cluster/stats"
         val clusterIndex = randomInt(clusterHosts.size - 1)
-        val input = randomLocalUriInput(
-            scheme = clusterHosts[clusterIndex].schemeName,
-            path = path
-        )
+        val input = randomLocalUriInput(path = path)
         val monitor = createMonitor(randomQueryLevelMonitor(inputs = listOf(input)))
 
         // WHEN
@@ -884,7 +878,7 @@ class MonitorRunnerIT : AlertingRestTestCase() {
 
         assertEquals(monitor.name, output["monitor_name"])
         assertTrue(
-            "Monitor results should contain cluster_name, but found: $resultsContent",
+            "Monitor results should contain monitor_name, but found: $resultsContent",
             resultsContent.toString().contains("memory_size_in_bytes")
         )
         assertNull("There should not be an error message, but found: $errorMessage", errorMessage)
@@ -903,10 +897,7 @@ class MonitorRunnerIT : AlertingRestTestCase() {
         )
         val path = "/_cluster/health"
         val clusterIndex = randomInt(clusterHosts.size - 1)
-        val input = randomLocalUriInput(
-            scheme = clusterHosts[clusterIndex].schemeName,
-            path = path
-        )
+        val input = randomLocalUriInput(path = path)
         val monitor = createMonitor(randomQueryLevelMonitor(inputs = listOf(input), triggers = listOf(trigger)))
 
         // WHEN
@@ -941,10 +932,7 @@ class MonitorRunnerIT : AlertingRestTestCase() {
         )
         val path = "/_cluster/stats"
         val clusterIndex = randomInt(clusterHosts.size - 1)
-        val input = randomLocalUriInput(
-            scheme = clusterHosts[clusterIndex].schemeName,
-            path = path
-        )
+        val input = randomLocalUriInput(path = path)
         val monitor = createMonitor(randomQueryLevelMonitor(inputs = listOf(input), triggers = listOf(trigger)))
 
         // WHEN
@@ -973,7 +961,6 @@ class MonitorRunnerIT : AlertingRestTestCase() {
         val path = "/_cluster/health/"
         val clusterIndex = randomInt(clusterHosts.size - 1)
         val input = randomLocalUriInput(
-            scheme = clusterHosts[clusterIndex].schemeName,
             path = path,
             pathParams = pathParams
         )

@@ -360,17 +360,13 @@ fun randomQueryLevelTriggerRunResult(): QueryLevelTriggerRunResult {
 }
 
 fun randomLocalUriInput(
-    scheme: String = if (randomInt(3) >= 2) "http" else "https",
-    host: String = LocalUriInput.SUPPORTED_HOST,
-    port: Int = LocalUriInput.SUPPORTED_PORT,
     path: String,
     pathParams: String = "",
-    queryParams: Map<String, String> = hashMapOf(),
     url: String = "",
     connectionTimeout: Int = 1 + randomInt(LocalUriInput.MAX_CONNECTION_TIMEOUT - 1),
     socketTimeout: Int = 1 + randomInt(LocalUriInput.MAX_SOCKET_TIMEOUT - 1)
 ): LocalUriInput {
-    return LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+    return LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 }
 
 fun randomBucketLevelTriggerRunResult(): BucketLevelTriggerRunResult {

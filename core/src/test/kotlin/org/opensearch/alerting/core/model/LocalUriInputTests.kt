@@ -1,29 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- *
- * The OpenSearch Contributors require contributions made to
- * this file be licensed under the Apache-2.0 license or a
- * compatible open source license.
- *
- * Modifications Copyright OpenSearch Contributors. See
- * GitHub history for details.
- */
-
-/*
- *   Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- *   Licensed under the Apache License, Version 2.0 (the "License").
- *   You may not use this file except in compliance with the License.
- *   A copy of the License is located at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   or in the "license" file accompanying this file. This file is distributed
- *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- *   express or implied. See the License for the specific language governing
- *   permissions and limitations under the License.
- */
-
 package org.opensearch.alerting.core.model
 
 import kotlin.test.Test
@@ -31,129 +5,52 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class LocalUriInputTests {
-    private var scheme = "http"
-    private var host = "localhost"
-    private var port = 9200
     private var path = "/_cluster/health"
     private var pathParams = ""
-    private var queryParams = hashMapOf<String, String>()
     private var url = ""
     private var connectionTimeout = 5
     private var socketTimeout = 5
 
     @Test
     fun `test valid LocalUriInput creation using HTTP URI component fields`() {
-        // GIVEN + WHEN
-        val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+        // GIVEN
+        val testUrl = "http://localhost:9200/_cluster/health"
+
+        // WHEN
+        val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
         // THEN
-        assertEquals(scheme, localUriInput.scheme)
-        assertEquals(host, localUriInput.host)
-        assertEquals(port, localUriInput.port)
         assertEquals(path, localUriInput.path)
-        assertEquals(queryParams, localUriInput.query_params)
-        assertEquals(url, localUriInput.url)
-        assertEquals(connectionTimeout, localUriInput.connection_timeout)
-        assertEquals(socketTimeout, localUriInput.socket_timeout)
+        assertEquals(pathParams, localUriInput.pathParams)
+        assertEquals(testUrl, localUriInput.url)
+        assertEquals(connectionTimeout, localUriInput.connectionTimeout)
+        assertEquals(socketTimeout, localUriInput.socketTimeout)
     }
 
     @Test
     fun `test valid LocalUriInput creation using HTTP url field`() {
         // GIVEN
-        scheme = ""
-        host = ""
-        port = -1
         path = ""
         url = "http://localhost:9200/_cluster/health"
 
         // WHEN
-        val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+        val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
         // THEN
         assertEquals(url, localUriInput.url)
-    }
-
-    @Test
-    fun `test valid LocalUriInput creation using HTTPS URI component fields`() {
-        // GIVEN
-        scheme = "https"
-
-        // WHEN
-        val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
-
-        // THEN
-        assertEquals(scheme, localUriInput.scheme)
-        assertEquals(host, localUriInput.host)
-        assertEquals(port, localUriInput.port)
-        assertEquals(path, localUriInput.path)
-        assertEquals(queryParams, localUriInput.query_params)
-        assertEquals(url, localUriInput.url)
-        assertEquals(connectionTimeout, localUriInput.connection_timeout)
-        assertEquals(socketTimeout, localUriInput.socket_timeout)
     }
 
     @Test
     fun `test valid LocalUriInput creation using HTTPS url field`() {
         // GIVEN
-        scheme = ""
-        host = ""
-        port = -1
+        path = ""
+        url = "https://localhost:9200/_cluster/health"
 
         // WHEN
-        val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+        val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
         // THEN
         assertEquals(url, localUriInput.url)
-    }
-
-    @Test
-    fun `test valid LocalUriInput creation with path, but empty scheme, host, and port fields`() {
-        // GIVEN
-        scheme = ""
-        host = ""
-        port = -1
-
-        // WHEN
-        val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
-
-        // THEN
-        assertEquals(path, localUriInput.path)
-        assertEquals(localUriInput.toConstructedUri().toString(), "http://localhost:9200/_cluster/health")
-    }
-
-    @Test
-    fun `test invalid scheme`() {
-        // GIVEN
-        scheme = "invalidScheme"
-
-        // WHEN + THEN
-        assertFailsWith<IllegalArgumentException>("Invalid URL.") {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
-        }
-    }
-
-    @Test
-    fun `test invalid host`() {
-        // GIVEN
-        host = "loco//host"
-
-        // WHEN + THEN
-        assertFailsWith<IllegalArgumentException>("Invalid URL.") {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
-        }
-    }
-
-    @Test
-    fun `test invalid host is not localhost`() {
-        // GIVEN
-        host = "127.0.0.1"
-
-        // WHEN + THEN
-        assertFailsWith<IllegalArgumentException>(
-            "Only host '${LocalUriInput.SUPPORTED_HOST}' is supported."
-        ) {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
-        }
     }
 
     @Test
@@ -163,20 +60,7 @@ class LocalUriInputTests {
 
         // WHEN + THEN
         assertFailsWith<IllegalArgumentException>("Invalid URL.") {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
-        }
-    }
-
-    @Test
-    fun `test invalid port`() {
-        // GIVEN
-        port = LocalUriInput.SUPPORTED_PORT + 1
-
-        // WHEN + THEN
-        assertFailsWith<IllegalArgumentException>(
-            "Only port '${LocalUriInput.SUPPORTED_PORT}' is supported."
-        ) {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
@@ -189,7 +73,7 @@ class LocalUriInputTests {
         assertFailsWith<IllegalArgumentException>(
             "Connection timeout: $connectionTimeout is not in the range of ${LocalUriInput.MIN_CONNECTION_TIMEOUT} - ${LocalUriInput.MIN_CONNECTION_TIMEOUT}."
         ) {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
@@ -202,7 +86,7 @@ class LocalUriInputTests {
         assertFailsWith<IllegalArgumentException>(
             "Connection timeout: $connectionTimeout is not in the range of ${LocalUriInput.MIN_CONNECTION_TIMEOUT} - ${LocalUriInput.MIN_CONNECTION_TIMEOUT}."
         ) {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
@@ -215,7 +99,7 @@ class LocalUriInputTests {
         assertFailsWith<IllegalArgumentException>(
             "Socket timeout: $socketTimeout is not in the range of ${LocalUriInput.MIN_SOCKET_TIMEOUT} - ${LocalUriInput.MAX_SOCKET_TIMEOUT}."
         ) {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
@@ -228,7 +112,7 @@ class LocalUriInputTests {
         assertFailsWith<IllegalArgumentException>(
             "Socket timeout: $socketTimeout is not in the range of ${LocalUriInput.MIN_SOCKET_TIMEOUT} - ${LocalUriInput.MAX_SOCKET_TIMEOUT}."
         ) {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
@@ -239,7 +123,7 @@ class LocalUriInputTests {
 
         // WHEN + THEN
         assertFailsWith<IllegalArgumentException>("Invalid URL.") {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
@@ -249,18 +133,33 @@ class LocalUriInputTests {
         url = "http://localhost:9200/_cluster/health"
 
         // WHEN
-        val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+        val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
         // THEN
-        assertEquals(scheme, localUriInput.scheme)
-        assertEquals(host, localUriInput.host)
-        assertEquals(port, localUriInput.port)
         assertEquals(path, localUriInput.path)
-        assertEquals(pathParams, localUriInput.path_params)
-        assertEquals(queryParams, localUriInput.query_params)
+        assertEquals(pathParams, localUriInput.pathParams)
         assertEquals(url, localUriInput.url)
-        assertEquals(connectionTimeout, localUriInput.connection_timeout)
-        assertEquals(socketTimeout, localUriInput.socket_timeout)
+        assertEquals(connectionTimeout, localUriInput.connectionTimeout)
+        assertEquals(socketTimeout, localUriInput.socketTimeout)
+        assertEquals(url, localUriInput.constructedUri.toString())
+    }
+
+    @Test
+    fun `test url field and URI component fields with path params create equal URI`() {
+        // GIVEN
+        path = "/_cluster/health/"
+        pathParams = "index1,index2,index3,index4,index5"
+        url = "http://localhost:9200/_cluster/health/index1,index2,index3,index4,index5"
+
+        // WHEN
+        val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
+
+        // THEN
+        assertEquals(path, localUriInput.path)
+        assertEquals(pathParams, localUriInput.pathParams)
+        assertEquals(url, localUriInput.url)
+        assertEquals(connectionTimeout, localUriInput.connectionTimeout)
+        assertEquals(socketTimeout, localUriInput.socketTimeout)
         assertEquals(url, localUriInput.constructedUri.toString())
     }
 
@@ -271,63 +170,92 @@ class LocalUriInputTests {
 
         // WHEN + THEN
         assertFailsWith<IllegalArgumentException>("The provided URL and URI fields form different URLs.") {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
+        }
+    }
+
+    @Test
+    fun `test url field and URI component fields with path params create different URI`() {
+        // GIVEN
+        pathParams = "index1,index2,index3,index4,index5"
+        url = "http://localhost:9200/_cluster/stats/index1,index2,index3,index4,index5"
+
+        // WHEN + THEN
+        assertFailsWith<IllegalArgumentException>("The provided URL and URI fields form different URLs.") {
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
     @Test
     fun `test LocalUriInput creation when all inputs are empty`() {
         // GIVEN
-        scheme = ""
-        host = ""
-        port = -1
         path = ""
+        pathParams = ""
         url = ""
 
         // WHEN + THEN
-        assertFailsWith<IllegalArgumentException>("Either the url field, or scheme + host + port + path + params must be set.") {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+        assertFailsWith<IllegalArgumentException>("The uri.api_type field, uri.path field, or uri.uri field must be defined.") {
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
+        }
+    }
+
+    @Test
+    fun `test LocalUriInput creation when all inputs but path params are empty`() {
+        // GIVEN
+        path = ""
+        pathParams = "index1,index2,index3,index4,index5"
+        url = ""
+
+        // WHEN + THEN
+        assertFailsWith<IllegalArgumentException>("The uri.api_type field, uri.path field, or uri.uri field must be defined.") {
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
+        }
+    }
+
+    @Test
+    fun `test invalid scheme in url field`() {
+        // GIVEN
+        path = ""
+        url = "invalidScheme://localhost:9200/_cluster/health"
+
+        // WHEN + THEN
+        assertFailsWith<IllegalArgumentException>("Invalid URL.") {
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
     @Test
     fun `test invalid host in url field`() {
         // GIVEN
-        scheme = ""
-        host = ""
-        port = -1
         path = ""
         url = "http://127.0.0.1:9200/_cluster/health"
 
         // WHEN + THEN
         assertFailsWith<IllegalArgumentException>("Only host '${LocalUriInput.SUPPORTED_HOST}' is supported.") {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
     @Test
     fun `test invalid port in url field`() {
         // GIVEN
-        scheme = ""
-        host = ""
-        port = -1
         path = ""
         url = "http://localhost:${LocalUriInput.SUPPORTED_PORT + 1}/_cluster/health"
 
         // WHEN + THEN
         assertFailsWith<IllegalArgumentException>("Only port '${LocalUriInput.SUPPORTED_PORT}' is supported.") {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
     @Test
-    fun `test getPathParams with no path params`() {
+    fun `test parsePathParams with no path params`() {
         // GIVEN
         val testUrl = "http://localhost:9200/_cluster/health"
-        val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+        val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
         // WHEN
-        val params = localUriInput.getPathParams()
+        val params = localUriInput.parsePathParams()
 
         // THEN
         assertEquals(pathParams, params)
@@ -335,15 +263,15 @@ class LocalUriInputTests {
     }
 
     @Test
-    fun `test getPathParams with path params as URI field`() {
+    fun `test parsePathParams with path params as URI field`() {
         // GIVEN
         path = "/_cluster/health/"
         pathParams = "index1,index2,index3,index4,index5"
         val testUrl = "http://localhost:9200/_cluster/health/index1,index2,index3,index4,index5"
-        val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+        val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
         // WHEN
-        val params = localUriInput.getPathParams()
+        val params = localUriInput.parsePathParams()
 
         // THEN
         assertEquals(pathParams, params)
@@ -351,18 +279,15 @@ class LocalUriInputTests {
     }
 
     @Test
-    fun `test getPathParams with path params in url`() {
+    fun `test parsePathParams with path params in url`() {
         // GIVEN
-        scheme = ""
-        host = ""
-        port = -1
         path = ""
         val testParams = "index1,index2,index3,index4,index5"
         url = "http://localhost:9200/_cluster/health/index1,index2,index3,index4,index5"
-        val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+        val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
         // WHEN
-        val params = localUriInput.getPathParams()
+        val params = localUriInput.parsePathParams()
 
         // THEN
         assertEquals(testParams, params)
@@ -370,43 +295,42 @@ class LocalUriInputTests {
     }
 
     @Test
-    fun `test getPathParams with no path params for ApiType that requires path params`() {
+    fun `test parsePathParams with no path params for ApiType that requires path params`() {
         // GIVEN
         path = "/_cat/snapshots"
-        val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
 
         // WHEN + THEN
         assertFailsWith<IllegalArgumentException>("The API requires path parameters.") {
-            localUriInput.getPathParams()
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
     @Test
-    fun `test getPathParams with path params for ApiType that doesn't support path params`() {
+    fun `test parsePathParams with path params for ApiType that doesn't support path params`() {
         // GIVEN
         path = "/_cluster/settings"
         pathParams = "index1,index2,index3,index4,index5"
-        val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+        val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
         // WHEN + THEN
         assertFailsWith<IllegalArgumentException>("The API does not use path parameters.") {
-            localUriInput.getPathParams()
+            localUriInput.parsePathParams()
         }
     }
 
     @Test
-    fun `test getPathParams with path params containing illegal characters`() {
+    fun `test parsePathParams with path params containing illegal characters`() {
         var testCount = 0 // Start off with count of 1 to account for ApiType.BLANK
         ILLEGAL_PATH_PARAMETER_CHARACTERS.forEach { character ->
             // GIVEN
             pathParams = "index1,index2,$character,index4,index5"
-            val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
             // WHEN + THEN
             assertFailsWith<IllegalArgumentException>(
                 "The provided path parameters contain invalid characters or spaces. Please omit: ${ILLEGAL_PATH_PARAMETER_CHARACTERS.joinToString(" ")}"
             ) {
-                localUriInput.getPathParams()
+                localUriInput.parsePathParams()
             }
             testCount++
         }
@@ -421,9 +345,10 @@ class LocalUriInputTests {
             .forEach { testApiType ->
                 // GIVEN
                 path = testApiType.defaultPath
+                pathParams = if (testApiType.supportsPathParams) "index1,index2,index3,index4,index5" else ""
 
                 // WHEN
-                val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+                val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
                 // THEN
                 assertEquals(testApiType, localUriInput.apiType)
@@ -443,7 +368,7 @@ class LocalUriInputTests {
                 pathParams = "index1,index2,index3,index4,index5"
 
                 // WHEN
-                val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+                val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
                 // THEN
                 assertEquals(testApiType, localUriInput.apiType)
@@ -459,14 +384,12 @@ class LocalUriInputTests {
             .filter { enum -> enum != LocalUriInput.ApiType.BLANK }
             .forEach { testApiType ->
                 // GIVEN
-                scheme = ""
-                host = ""
-                port = -1
                 path = ""
+                pathParams = if (testApiType.supportsPathParams) "index1,index2,index3,index4,index5" else ""
                 url = "http://localhost:9200${testApiType.defaultPath}"
 
                 // WHEN
-                val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+                val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
                 // THEN
                 assertEquals(testApiType, localUriInput.apiType)
@@ -482,14 +405,12 @@ class LocalUriInputTests {
             .filter { enum -> enum != LocalUriInput.ApiType.BLANK }
             .forEach { testApiType ->
                 // GIVEN
-                scheme = ""
-                host = ""
-                port = -1
                 path = ""
-                url = "http://localhost:9200${testApiType.defaultPath}/index1,index2,index3,index4,index5"
+                pathParams = if (testApiType.supportsPathParams) "/index1,index2,index3,index4,index5" else ""
+                url = "http://localhost:9200${testApiType.defaultPath}$pathParams"
 
                 // WHEN
-                val localUriInput = LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+                val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
 
                 // THEN
                 assertEquals(testApiType, localUriInput.apiType)
@@ -505,7 +426,7 @@ class LocalUriInputTests {
 
         // WHEN + THEN
         assertFailsWith<IllegalArgumentException>("The API could not be determined from the provided URI.") {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
@@ -517,37 +438,65 @@ class LocalUriInputTests {
 
         // WHEN + THEN
         assertFailsWith<IllegalArgumentException>("The API could not be determined from the provided URI.") {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
     @Test
     fun `test LocalUriInput cannot determine ApiType when invaid path is provided in URL`() {
         // GIVEN
-        scheme = ""
-        host = ""
-        port = -1
         path = ""
         url = "http://localhost:9200/_cat/paws"
 
         // WHEN + THEN
         assertFailsWith<IllegalArgumentException>("The API could not be determined from the provided URI.") {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
     @Test
     fun `test LocalUriInput cannot determine ApiType when invaid path and path params are provided in URL`() {
         // GIVEN
-        scheme = ""
-        host = ""
-        port = -1
         path = ""
         url = "http://localhost:9200/_cat/paws/index1,index2,index3,index4,index5"
 
         // WHEN + THEN
         assertFailsWith<IllegalArgumentException>("The API could not be determined from the provided URI.") {
-            LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
+    }
+
+    @Test
+    fun `test parseEmptyFields populates empty path and path_params when url is provided`() {
+        // GIVEN
+        path = ""
+        pathParams = ""
+        val testPath = "/_cluster/health"
+        val testPathParams = "index1,index2,index3,index4,index5"
+        url = "http://localhost:9200$testPath$testPathParams"
+
+        // WHEN
+        val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
+
+        // THEN
+        assertEquals(testPath, localUriInput.path)
+        assertEquals(testPathParams, localUriInput.pathParams)
+        assertEquals(url, localUriInput.url)
+    }
+
+    @Test
+    fun `test parseEmptyFields populates empty url field when path and path_params are provided`() {
+        // GIVEN
+        path = "/_cluster/health/"
+        pathParams = "index1,index2,index3,index4,index5"
+        val testUrl = "http://localhost:9200$path$pathParams"
+
+        // WHEN
+        val localUriInput = LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
+
+        // THEN
+        assertEquals(path, localUriInput.path)
+        assertEquals(pathParams, localUriInput.pathParams)
+        assertEquals(testUrl, localUriInput.url)
     }
 }

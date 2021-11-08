@@ -1,29 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- *
- * The OpenSearch Contributors require contributions made to
- * this file be licensed under the Apache-2.0 license or a
- * compatible open source license.
- *
- * Modifications Copyright OpenSearch Contributors. See
- * GitHub history for details.
- */
-
-/*
- *   Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- *   Licensed under the Apache License, Version 2.0 (the "License").
- *   You may not use this file except in compliance with the License.
- *   A copy of the License is located at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   or in the "license" file accompanying this file. This file is distributed
- *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- *   express or implied. See the License for the specific language governing
- *   permissions and limitations under the License.
- */
-
 package org.opensearch.alerting.util
 
 import org.opensearch.action.ActionResponse
@@ -63,8 +37,6 @@ import org.opensearch.common.xcontent.support.XContentMapValues
 fun executeTransportAction(localUriInput: LocalUriInput, client: Client): ActionResponse {
     val request = resolveToActionRequest(localUriInput)
     return when (localUriInput.apiType) {
-        // TODO: For CAT_ALIASES, implement toXContent parsing logic for response.
-//        ApiType.CAT_ALIASES -> client.admin().indices().getAliases(request as GetAliasesRequest).get()
         ApiType.CAT_PENDING_TASKS -> client.admin().cluster().pendingClusterTasks(request as PendingClusterTasksRequest).get()
         ApiType.CAT_RECOVERY -> client.admin().indices().recoveries(request as RecoveryRequest).get()
         ApiType.CAT_REPOSITORIES -> client.admin().cluster().getRepositories(request as GetRepositoriesRequest).get()
@@ -76,8 +48,6 @@ fun executeTransportAction(localUriInput: LocalUriInput, client: Client): Action
             return ClusterGetSettingsResponse(metadata.persistentSettings(), metadata.transientSettings(), Settings.EMPTY)
         }
         ApiType.CLUSTER_STATS -> client.admin().cluster().clusterStats(request as ClusterStatsRequest).get()
-        // TODO: For NODES_HOT_THREADS, determine what the response payload should look like.
-//        ApiType.NODES_HOT_THREADS -> client.admin().cluster().nodesHotThreads(request as NodesHotThreadsRequest).get()
         ApiType.NODES_STATS -> client.admin().cluster().nodesStats(request as NodesStatsRequest).get()
         else -> throw IllegalArgumentException("Unsupported API request type: ${request.javaClass.name}")
     }

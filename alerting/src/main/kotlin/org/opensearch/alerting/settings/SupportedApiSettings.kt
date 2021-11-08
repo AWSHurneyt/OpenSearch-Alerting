@@ -80,7 +80,9 @@ class SupportedApiSettings {
             val supportedJsonPayloads = SupportedApiSettings::class.java.getResource(RESOURCE_FILE)
             @Suppress("UNCHECKED_CAST")
             if (supportedJsonPayloads != null) supportedApiList =
-                XContentHelper.convertToMap(JsonXContent.jsonXContent, supportedJsonPayloads.readText(), false) as HashMap<String, Map<String, ArrayList<String>>>
+                XContentHelper.convertToMap(
+                JsonXContent.jsonXContent, supportedJsonPayloads.readText(), false
+            ) as HashMap<String, Map<String, ArrayList<String>>>
         }
 
         /**
@@ -101,13 +103,8 @@ class SupportedApiSettings {
          * @return The [ActionRequest] for the API associated with the provided [LocalUriInput].
          */
         fun resolveToActionRequest(localUriInput: LocalUriInput): ActionRequest {
-            val pathParams = localUriInput.getPathParams()
+            val pathParams = localUriInput.parsePathParams()
             return when (localUriInput.apiType) {
-                // TODO: For CAT_ALIASES, implement toXContent parsing logic for response.
-//                ApiType.CAT_ALIASES -> {
-//                    val pathParamsArray = pathParams.split(",").toTypedArray()
-//                    return GetAliasesRequest(*pathParamsArray)
-//                }
                 ApiType.CAT_PENDING_TASKS -> PendingClusterTasksRequest()
                 ApiType.CAT_RECOVERY -> {
                     if (pathParams.isEmpty()) return RecoveryRequest()
@@ -130,11 +127,6 @@ class SupportedApiSettings {
                     val pathParamsArray = pathParams.split(",").toTypedArray()
                     return ClusterStatsRequest(*pathParamsArray)
                 }
-                // TODO: For NODES_HOT_THREADS, determine what the response payload should look like.
-//                ApiType.NODES_HOT_THREADS -> {
-//                    val pathParamsArray = pathParams.split(",").toTypedArray()
-//                    return NodesHotThreadsRequest(*pathParamsArray)
-//                }
                 ApiType.NODES_STATS -> NodesStatsRequest()
                 else -> throw IllegalArgumentException("Unsupported API.")
             }

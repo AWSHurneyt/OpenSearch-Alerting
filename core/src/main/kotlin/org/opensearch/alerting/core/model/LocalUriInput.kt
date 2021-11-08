@@ -45,15 +45,11 @@ val ILLEGAL_PATH_PARAMETER_CHARACTERS = arrayOf('=', '?', '"', ' ')
  * This is a data class for a URI type of input for Monitors specifically for local clusters.
  */
 data class LocalUriInput(
-    val scheme: String,
-    val host: String,
-    val port: Int,
-    val path: String,
-    val path_params: String,
-    val query_params: Map<String, String>,
-    val url: String,
-    val connection_timeout: Int,
-    val socket_timeout: Int
+    var path: String,
+    var pathParams: String = "",
+    var url: String,
+    val connectionTimeout: Int,
+    val socketTimeout: Int
 ) : Input {
     val apiType: ApiType
     val constructedUri: URI
@@ -61,19 +57,13 @@ data class LocalUriInput(
     // Verify parameters are valid during creation
     init {
         require(validateFields()) {
-            "Either the URL field, or scheme + host + port + path + params must be set."
+            "The uri.api_type field, uri.path field, or uri.uri field must be defined."
         }
-        require(host == "" || host.toLowerCase() == SUPPORTED_HOST) {
-            "Only host '$SUPPORTED_HOST' is supported."
+        require(connectionTimeout in MIN_CONNECTION_TIMEOUT..MAX_CONNECTION_TIMEOUT) {
+            "Connection timeout: $connectionTimeout is not in the range of $MIN_CONNECTION_TIMEOUT - $MAX_CONNECTION_TIMEOUT."
         }
-        require(port == -1 || port == SUPPORTED_PORT) {
-            "Only port '$SUPPORTED_PORT' is supported."
-        }
-        require(connection_timeout in MIN_CONNECTION_TIMEOUT..MAX_CONNECTION_TIMEOUT) {
-            "Connection timeout: $connection_timeout is not in the range of $MIN_CONNECTION_TIMEOUT - $MAX_CONNECTION_TIMEOUT."
-        }
-        require(socket_timeout in MIN_SOCKET_TIMEOUT..MAX_SOCKET_TIMEOUT) {
-            "Socket timeout: $socket_timeout is not in the range of $MIN_SOCKET_TIMEOUT - $MAX_SOCKET_TIMEOUT."
+        require(socketTimeout in MIN_SOCKET_TIMEOUT..MAX_SOCKET_TIMEOUT) {
+            "Socket timeout: $socketTimeout is not in the range of $MIN_SOCKET_TIMEOUT - $MAX_SOCKET_TIMEOUT."
         }
 
         // Create an UrlValidator that only accepts "http" and "https" as valid scheme and allows local URLs.
@@ -99,21 +89,18 @@ data class LocalUriInput(
         }
 
         apiType = findApiType(constructedUri.path)
+        this.parseEmptyFields()
     }
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         return builder.startObject()
             .startObject(URI_FIELD)
             .field(API_TYPE_FIELD, apiType)
-            .field(SCHEME_FIELD, scheme)
-            .field(HOST_FIELD, host)
-            .field(PORT_FIELD, port)
             .field(PATH_FIELD, path)
-            .field(PATH_PARAMS_FIELD, path_params)
-            .field(QUERY_PARAMS_FIELD, this.query_params)
+            .field(PATH_PARAMS_FIELD, pathParams)
             .field(URL_FIELD, url)
-            .field(CONNECTION_TIMEOUT_FIELD, connection_timeout)
-            .field(SOCKET_TIMEOUT_FIELD, socket_timeout)
+            .field(CONNECTION_TIMEOUT_FIELD, connectionTimeout)
+            .field(SOCKET_TIMEOUT_FIELD, socketTimeout)
             .endObject()
             .endObject()
     }
@@ -124,35 +111,26 @@ data class LocalUriInput(
 
     override fun writeTo(out: StreamOutput) {
         out.writeString(apiType.toString())
-        out.writeString(scheme)
-        out.writeString(host)
-        out.writeInt(port)
         out.writeString(path)
-        out.writeString(path_params)
-        out.writeMap(query_params)
+        out.writeString(pathParams)
         out.writeString(url)
-        out.writeInt(connection_timeout)
-        out.writeInt(socket_timeout)
+        out.writeInt(connectionTimeout)
+        out.writeInt(socketTimeout)
     }
 
     companion object {
         const val MIN_CONNECTION_TIMEOUT = 1
         const val MAX_CONNECTION_TIMEOUT = 5
-        const val MIN_PORT = 1
-        const val MAX_PORT = 65535
         const val MIN_SOCKET_TIMEOUT = 1
         const val MAX_SOCKET_TIMEOUT = 60
 
+        const val SUPPORTED_SCHEME = "http"
         const val SUPPORTED_HOST = "localhost"
         const val SUPPORTED_PORT = 9200
 
-        const val API_TYPE_FIELD = "apiType"
-        const val SCHEME_FIELD = "scheme"
-        const val HOST_FIELD = "host"
-        const val PORT_FIELD = "port"
+        const val API_TYPE_FIELD = "api_type"
         const val PATH_FIELD = "path"
-        const val PATH_PARAMS_FIELD = "pathParams"
-        const val QUERY_PARAMS_FIELD = "queryParams"
+        const val PATH_PARAMS_FIELD = "path_params"
         const val URL_FIELD = "url"
         const val CONNECTION_TIMEOUT_FIELD = "connection_timeout"
         const val SOCKET_TIMEOUT_FIELD = "socket_timeout"
@@ -165,12 +143,8 @@ data class LocalUriInput(
          */
         @JvmStatic @Throws(IOException::class)
         private fun parseInner(xcp: XContentParser): LocalUriInput {
-            var scheme = "http"
-            var host = ""
-            var port: Int = -1
             var path = ""
             var pathParams = ""
-            var queryParams: Map<String, String> = mutableMapOf()
             var url = ""
             var connectionTimeout = MAX_CONNECTION_TIMEOUT
             var socketTimeout = MAX_SOCKET_TIMEOUT
@@ -181,26 +155,24 @@ data class LocalUriInput(
                 val fieldName = xcp.currentName()
                 xcp.nextToken()
                 when (fieldName) {
-                    SCHEME_FIELD -> scheme = xcp.text()
-                    HOST_FIELD -> host = xcp.text()
-                    PORT_FIELD -> port = xcp.intValue()
                     PATH_FIELD -> path = xcp.text()
                     PATH_PARAMS_FIELD -> pathParams = xcp.text()
-                    QUERY_PARAMS_FIELD -> queryParams = xcp.mapStrings()
                     URL_FIELD -> url = xcp.text()
                     CONNECTION_TIMEOUT_FIELD -> connectionTimeout = xcp.intValue()
                     SOCKET_TIMEOUT_FIELD -> socketTimeout = xcp.intValue()
                 }
             }
-            return LocalUriInput(scheme, host, port, path, pathParams, queryParams, url, connectionTimeout, socketTimeout)
+            return LocalUriInput(path, pathParams, url, connectionTimeout, socketTimeout)
         }
     }
 
     /**
-     * Constructs the [URI] either using [url] or using [scheme]+[host]+[port]+[path]+[path_params]+[query_params].
-     * @return The [URI] constructed from [url] if it's defined; otherwise a [URI] constructed from the provided [URI] fields.
+     * Constructs the [URI] using either the provided [url], or the
+     * supported scheme, host, and port and provided [path]+[pathParams].
+     * @return The [URI] constructed from [url] if it's defined;
+     * otherwise a [URI] constructed from the provided [URI] fields.
      */
-    fun toConstructedUri(): URI {
+    private fun toConstructedUri(): URI {
         return if (url.isEmpty()) {
             constructUrlFromInputs()
         } else {
@@ -214,15 +186,15 @@ data class LocalUriInput(
      * @throws IllegalArgumentException if the [ApiType] requires path parameters, but none are supplied;
      * or when path parameters are provided for an [ApiType] that does not use path parameters.
      */
-    fun getPathParams(): String {
+    fun parsePathParams(): String {
         val path = this.constructedUri.path
         val apiType = this.apiType
 
         var pathParams: String
-        if (this.path_params.isNotEmpty()) {
-            pathParams = this.path_params
+        if (this.pathParams.isNotEmpty()) {
+            pathParams = this.pathParams
         } else {
-            val prependPath = if (apiType.usesPathParams) apiType.prependPath else apiType.defaultPath
+            val prependPath = if (apiType.supportsPathParams) apiType.prependPath else apiType.defaultPath
             pathParams = path.removePrefix(prependPath)
             pathParams = pathParams.removeSuffix(apiType.appendPath)
         }
@@ -237,7 +209,7 @@ data class LocalUriInput(
 
         if (apiType.requiresPathParams && pathParams.isEmpty())
             throw IllegalArgumentException("The API requires path parameters.")
-        if (!apiType.usesPathParams && pathParams.isNotEmpty())
+        if (!apiType.supportsPathParams && pathParams.isNotEmpty())
             throw IllegalArgumentException("The API does not use path parameters.")
 
         return pathParams
@@ -253,29 +225,43 @@ data class LocalUriInput(
         var apiType = ApiType.BLANK
         ApiType.values()
             .filter { option -> option != ApiType.BLANK }
-            .forEach { option -> if (uriPath.startsWith(option.prependPath)) apiType = option }
+            .forEach { option ->
+                if (uriPath.startsWith(option.prependPath) || uriPath.startsWith(option.defaultPath))
+                    apiType = option
+            }
         if (apiType.isBlank())
             throw IllegalArgumentException("The API could not be determined from the provided URI.")
         return apiType
     }
 
     /**
-     * Constructs a [URI] from the provided [scheme], [host], [port], [path], [path_params], and [query_params].
+     * Constructs a [URI] from the supported scheme, host, and port, and the provided [path], and [pathParams].
      * @return The constructed [URI].
      */
     private fun constructUrlFromInputs(): URI {
         val uriBuilder = URIBuilder()
-            .setScheme(if (scheme.isNotEmpty()) scheme else "http")
-            .setHost(if (host.isNotEmpty()) host else SUPPORTED_HOST)
-            .setPort(if (port != -1) port else SUPPORTED_PORT)
-            .setPath(path + path_params)
-        for (e in query_params.entries)
-            uriBuilder.addParameter(e.key, e.value)
+            .setScheme(SUPPORTED_SCHEME)
+            .setHost(SUPPORTED_HOST)
+            .setPort(SUPPORTED_PORT)
+            .setPath(path + pathParams)
         return uriBuilder.build()
     }
 
     /**
-     * Helper function to confirm at least [url], or [scheme]+[host]+[port]+[path] is defined.
+     * If [url] field is empty, populates it with [constructedUri].
+     * If [path] and [pathParams] are empty, populates them with values from [url].
+     */
+    private fun parseEmptyFields() {
+        if (pathParams.isEmpty())
+            pathParams = this.parsePathParams()
+        if (path.isEmpty())
+            path = if (pathParams.isEmpty()) apiType.defaultPath else apiType.prependPath
+        if (url.isEmpty())
+            url = constructedUri.toString()
+    }
+
+    /**
+     * Helper function to confirm at least [url], or required URI component fields are defined.
      * @return TRUE if at least either [url] or the other components are provided; otherwise FALSE.
      */
     private fun validateFields(): Boolean {
@@ -283,12 +269,12 @@ data class LocalUriInput(
     }
 
     /**
-     * Confirms the [scheme], [host], [port], and [path] fields are defined.
+     * Confirms that required URI component fields are defined.
      * Only validating path for now, as that's the only required field.
      * @return TRUE if all those fields are defined; otherwise FALSE.
      */
     private fun validateFieldsNotEmpty(): Boolean {
-        return scheme.isNotEmpty() || path.isNotEmpty()
+        return path.isNotEmpty()
     }
 
     /**
@@ -298,17 +284,10 @@ data class LocalUriInput(
         val defaultPath: String,
         val prependPath: String,
         val appendPath: String,
-        val usesPathParams: Boolean,
+        val supportsPathParams: Boolean,
         val requiresPathParams: Boolean
     ) {
         BLANK("", "", "", false, false),
-        //        CAT_ALIASES( // TODO: For CAT_ALIASES, implement toXContent parsing logic for response.
-//            "/_cat/aliases",
-//            "/_cat/aliases",
-//            "",
-//            true,
-//            false
-//        ),
         CAT_PENDING_TASKS(
             "/_cat/pending_tasks",
             "/_cat/pending_tasks",
@@ -365,18 +344,11 @@ data class LocalUriInput(
             true,
             false
         ),
-        //        NODES_HOT_THREADS( // TODO: For NODES_HOT_THREADS, determine what the response payload should look like.
-//            "/_nodes/hot_threads",
-//            "/_nodes",
-//            "/hot_threads",
-//            true,
-//            false
-//        ),
         NODES_STATS(
             "/_nodes/stats",
             "/_nodes",
             "",
-            false, // TODO: False for now. Implement logic for parsing various path params formats.
+            false,
             false
         );
 
