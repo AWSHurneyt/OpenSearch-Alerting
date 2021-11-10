@@ -99,6 +99,7 @@ class InputService(
                     is LocalUriInput -> {
                         logger.debug("LocalUriInput ApiType: ${input.apiType}")
                         val response = executeTransportAction(input, client)
+                        logger.info("hurneyt response = ${response.toMap()}") // TODO hurneyt
                         results += withContext(Dispatchers.IO) {
                             response.toMap()
                         }

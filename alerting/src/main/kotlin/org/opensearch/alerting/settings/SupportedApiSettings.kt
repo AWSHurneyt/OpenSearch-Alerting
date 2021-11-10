@@ -26,6 +26,7 @@
 
 package org.opensearch.alerting.settings
 
+import org.apache.logging.log4j.LogManager
 import org.opensearch.action.ActionRequest
 import org.opensearch.action.admin.cluster.health.ClusterHealthRequest
 import org.opensearch.action.admin.cluster.node.stats.NodesStatsRequest
@@ -47,6 +48,7 @@ import org.opensearch.common.xcontent.json.JsonXContent
 class SupportedApiSettings {
     companion object {
         const val RESOURCE_FILE = "supported_json_payloads.json"
+        private val logger = LogManager.getLogger(SupportedApiSettings::class.java)
 
         /**
          * The key in this map represents the path to call an API.
@@ -83,6 +85,7 @@ class SupportedApiSettings {
                 XContentHelper.convertToMap(
                 JsonXContent.jsonXContent, supportedJsonPayloads.readText(), false
             ) as HashMap<String, Map<String, ArrayList<String>>>
+            logger.info("hurneyt supportedJsonPayloads = $supportedJsonPayloads")
         }
 
         /**
@@ -92,7 +95,7 @@ class SupportedApiSettings {
          * @throws IllegalArgumentException When supportedApiList does not contain a value for the provided key.
          */
         fun getSupportedJsonPayload(path: String): Map<String, ArrayList<String>> {
-            return supportedApiList[path] ?: throw IllegalArgumentException("API path not in supportedApiList.")
+            return supportedApiList[path] ?: throw IllegalArgumentException("API path not in supportedApiList. path = $path") // TODO hurneyt
         }
 
         /**
@@ -104,6 +107,7 @@ class SupportedApiSettings {
          */
         fun resolveToActionRequest(localUriInput: LocalUriInput): ActionRequest {
             val pathParams = localUriInput.parsePathParams()
+            logger.info("resolveToActionRequest::pathParams = $pathParams") // TODO hurneyt
             return when (localUriInput.apiType) {
                 ApiType.CAT_PENDING_TASKS -> PendingClusterTasksRequest()
                 ApiType.CAT_RECOVERY -> {
@@ -128,7 +132,7 @@ class SupportedApiSettings {
                     return ClusterStatsRequest(*pathParamsArray)
                 }
                 ApiType.NODES_STATS -> NodesStatsRequest()
-                else -> throw IllegalArgumentException("Unsupported API.")
+                else -> throw IllegalArgumentException("Unsupported API. \napiType = ${localUriInput.apiType} \nlocalUriInput = $localUriInput") // TODO hurneyt
             }
         }
 
@@ -140,7 +144,7 @@ class SupportedApiSettings {
          */
         fun validateApiType(localUriInput: LocalUriInput) {
             if (!supportedApiList.keys.contains(localUriInput.apiType.defaultPath))
-                throw IllegalArgumentException("API path not in supportedApiList.")
+                throw IllegalArgumentException("API path not in supportedApiList. \napiType = ${localUriInput.apiType} \nlocalUriInput = $localUriInput") // TODO hurneyt
         }
     }
 }

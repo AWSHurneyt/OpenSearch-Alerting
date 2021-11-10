@@ -28,6 +28,7 @@ package org.opensearch.alerting.core.model
 
 import org.apache.commons.validator.routines.UrlValidator
 import org.apache.http.client.utils.URIBuilder
+import org.apache.logging.log4j.LogManager
 import org.opensearch.common.CheckedFunction
 import org.opensearch.common.ParseField
 import org.opensearch.common.io.stream.StreamOutput
@@ -53,9 +54,14 @@ data class LocalUriInput(
 ) : Input {
     val apiType: ApiType
     val constructedUri: URI
+    private val logger = LogManager.getLogger(LocalUriInput::class.java) // TODO hurneyt
 
     // Verify parameters are valid during creation
     init {
+        // TODO hurneyt
+        logger.info("fields PRE \npath = $path \npathParams = $pathParams \nurl = $url")
+        logger.info("this = $this")
+
         require(validateFields()) {
             "The uri.api_type field, uri.path field, or uri.uri field must be defined."
         }
@@ -70,15 +76,18 @@ data class LocalUriInput(
         val urlValidator = UrlValidator(arrayOf("http", "https"), UrlValidator.ALLOW_LOCAL_URLS)
 
         // Build url field by field if not provided as whole.
+        // TODO LocalUri: Seems to be throwing a 500 internal error around here when the input includes illegal characters
+        //  RE: https://amzn-aws.slack.com/archives/C02L5D8GF1S/p1636571432001300
+        //  Perhaps check path, pathParams, and url against ILLEGAL_PATH_PARAMETER_CHARACTERS before continuing
         constructedUri = toConstructedUri()
 
         require(urlValidator.isValid(constructedUri.toString())) {
-            "Invalid URL."
+            "Invalid URL. constructedUri = $constructedUri" // TODO hurneyt
         }
 
         if (url.isNotEmpty() && validateFieldsNotEmpty())
-            require(constructedUri == constructUrlFromInputs()) {
-                "The provided URL and URI fields form different URLs."
+            require(constructedUri == constructUrlFromInputs()) { // TODO hurneyt
+                "The provided URL and URI fields form different URLs. \nconstructedUri = $constructedUri \nurlFromInputs = ${constructUrlFromInputs()}"
             }
 
         require(constructedUri.host.toLowerCase() == SUPPORTED_HOST) {
@@ -90,6 +99,11 @@ data class LocalUriInput(
 
         apiType = findApiType(constructedUri.path)
         this.parseEmptyFields()
+
+        // TODO hurneyt
+        logger.info("apiType = $apiType \nconstructedUri = $constructedUri")
+        logger.info("fields POST \npath = $path \npathParams = $pathParams \nurl = $url")
+        logger.info("this = $this")
     }
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
@@ -189,6 +203,8 @@ data class LocalUriInput(
     fun parsePathParams(): String {
         val path = this.constructedUri.path
         val apiType = this.apiType
+        logger.info("hurneyt parsePathParams::path = $path")
+        logger.info("hurneyt parsePathParams::apiType = $apiType")
 
         var pathParams: String
         if (this.pathParams.isNotEmpty()) {
@@ -208,9 +224,9 @@ data class LocalUriInput(
         }
 
         if (apiType.requiresPathParams && pathParams.isEmpty())
-            throw IllegalArgumentException("The API requires path parameters.")
+            throw IllegalArgumentException("The API requires path parameters. \napiType = $apiType \npathParams = $pathParams") // TODO hurneyt
         if (!apiType.supportsPathParams && pathParams.isNotEmpty())
-            throw IllegalArgumentException("The API does not use path parameters.")
+            throw IllegalArgumentException("The API does not use path parameters. hurneyt \napiType = $apiType \npathParams = $pathParams") // TODO hurneyt
 
         return pathParams
     }
