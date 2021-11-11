@@ -11,8 +11,8 @@
 
 package org.opensearch.alerting
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+// import kotlinx.coroutines.Dispatchers // TODO hurneyt
+// import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.opensearch.action.search.SearchRequest
 import org.opensearch.action.search.SearchResponse
