@@ -107,15 +107,23 @@ data class LocalUriInput(
     }
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
-        return builder.startObject()
-            .startObject(URI_FIELD)
+//        return builder.startObject()
+//            .startObject(URI_FIELD)
+//            .field(API_TYPE_FIELD, apiType)
+//            .field(PATH_FIELD, path)
+//            .field(PATH_PARAMS_FIELD, pathParams)
+//            .field(URL_FIELD, url)
+//            .field(CONNECTION_TIMEOUT_FIELD, connectionTimeout)
+//            .field(SOCKET_TIMEOUT_FIELD, socketTimeout)
+//            .endObject()
+//            .endObject()
+        return builder.startObject(URI_FIELD)
             .field(API_TYPE_FIELD, apiType)
             .field(PATH_FIELD, path)
             .field(PATH_PARAMS_FIELD, pathParams)
             .field(URL_FIELD, url)
             .field(CONNECTION_TIMEOUT_FIELD, connectionTimeout)
             .field(SOCKET_TIMEOUT_FIELD, socketTimeout)
-            .endObject()
             .endObject()
     }
 
