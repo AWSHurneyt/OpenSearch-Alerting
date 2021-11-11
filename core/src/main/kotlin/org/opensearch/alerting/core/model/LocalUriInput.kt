@@ -107,23 +107,16 @@ data class LocalUriInput(
     }
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
-//        return builder.startObject()
-//            .startObject(URI_FIELD)
-//            .field(API_TYPE_FIELD, apiType)
-//            .field(PATH_FIELD, path)
-//            .field(PATH_PARAMS_FIELD, pathParams)
-//            .field(URL_FIELD, url)
-//            .field(CONNECTION_TIMEOUT_FIELD, connectionTimeout)
-//            .field(SOCKET_TIMEOUT_FIELD, socketTimeout)
-//            .endObject()
-//            .endObject()
-        return builder.startObject(URI_FIELD)
+        logger.info("hurneyt toXContent CALL")
+        return builder.startObject()
+            .startObject(URI_FIELD)
             .field(API_TYPE_FIELD, apiType)
             .field(PATH_FIELD, path)
             .field(PATH_PARAMS_FIELD, pathParams)
             .field(URL_FIELD, url)
             .field(CONNECTION_TIMEOUT_FIELD, connectionTimeout)
             .field(SOCKET_TIMEOUT_FIELD, socketTimeout)
+            .endObject()
             .endObject()
     }
 
@@ -132,12 +125,14 @@ data class LocalUriInput(
     }
 
     override fun writeTo(out: StreamOutput) {
+        logger.info("hurneyt writeTo START")
         out.writeString(apiType.toString())
         out.writeString(path)
         out.writeString(pathParams)
         out.writeString(url)
         out.writeInt(connectionTimeout)
         out.writeInt(socketTimeout)
+        logger.info("hurneyt writeTo END")
     }
 
     companion object {
