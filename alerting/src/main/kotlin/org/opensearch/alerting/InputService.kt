@@ -98,11 +98,14 @@ class InputService(
                     }
                     is LocalUriInput -> {
                         logger.debug("LocalUriInput ApiType: ${input.apiType}")
+                        logger.info("hurneyt executeTransportAction START")
                         val response = executeTransportAction(input, client)
+                        logger.info("hurneyt executeTransportAction END")
                         logger.info("hurneyt response = ${response.toMap()}") // TODO hurneyt
-                        results += withContext(Dispatchers.IO) {
-                            response.toMap()
-                        }
+                        results += response.toMap()
+//                        results += withContext(Dispatchers.IO) {
+//                            response.toMap()
+//                        }
                     }
                     else -> {
                         throw IllegalArgumentException("Unsupported input type: ${input.name()}.")
