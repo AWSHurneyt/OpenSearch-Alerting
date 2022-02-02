@@ -138,6 +138,7 @@ class TransportIndexMonitorAction @Inject constructor(
         request: IndexMonitorRequest,
         user: User?
     ) {
+        log.info("hurneyt TransportIndexMonitorAction::checkIndicesAndExecute START")
         val indices = mutableListOf<String>()
         val searchInputs = request.monitor.inputs.filter { it.name() == SearchInput.SEARCH_FIELD }
         searchInputs.forEach {
@@ -150,15 +151,18 @@ class TransportIndexMonitorAction @Inject constructor(
             searchRequest,
             object : ActionListener<SearchResponse> {
                 override fun onResponse(searchResponse: SearchResponse) {
+                    log.info("hurneyt checkIndicesAndExecute onResponse START")
                     // User has read access to configured indices in the monitor, now create monitor with out user context.
                     client.threadPool().threadContext.stashContext().use {
                         IndexMonitorHandler(client, actionListener, request, user).resolveUserAndStart()
                     }
+                    log.info("hurneyt checkIndicesAndExecute onResponse END")
                 }
 
                 //  Due to below issue with security plugin, we get security_exception when invalid index name is mentioned.
                 //  https://github.com/opendistro-for-elasticsearch/security/issues/718
                 override fun onFailure(t: Exception) {
+                    log.info("hurneyt checkIndicesAndExecute onFailure START")
                     actionListener.onFailure(
                         AlertingException.wrap(
                             when (t is OpenSearchSecurityException) {
@@ -167,13 +171,18 @@ class TransportIndexMonitorAction @Inject constructor(
                                         "$indices",
                                     RestStatus.FORBIDDEN
                                 )
-                                false -> t
+                                false -> {
+                                    log.info("hurneyt checkIndicesAndExecute onFailure t = $t")
+                                    t
+                                }
                             }
                         )
                     )
+                    log.info("hurneyt checkIndicesAndExecute onFailure END")
                 }
             }
         )
+        log.info("hurneyt TransportIndexMonitorAction::checkIndicesAndExecute END")
     }
 
     /**
