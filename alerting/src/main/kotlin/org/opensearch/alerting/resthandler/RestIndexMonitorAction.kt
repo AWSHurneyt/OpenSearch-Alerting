@@ -90,6 +90,8 @@ class RestIndexMonitorAction : BaseRestHandler() {
     @Throws(IOException::class)
     override fun prepareRequest(request: RestRequest, client: NodeClient): RestChannelConsumer {
         log.debug("${request.method()} ${AlertingPlugin.MONITOR_BASE_URI}")
+        log.info("hurneyt RestIndexMonitorAction::prepareRequest START")
+        log.info("hurneyt RestIndexMonitorAction::prepareRequest request = $request")
 
         val id = request.param("monitorID", Monitor.NO_ID)
         if (request.method() == PUT && Monitor.NO_ID == id) {
@@ -109,6 +111,7 @@ class RestIndexMonitorAction : BaseRestHandler() {
         }
         val indexMonitorRequest = IndexMonitorRequest(id, seqNo, primaryTerm, refreshPolicy, request.method(), monitor)
 
+        log.info("hurneyt RestIndexMonitorAction::prepareRequest END")
         return RestChannelConsumer { channel ->
             client.execute(IndexMonitorAction.INSTANCE, indexMonitorRequest, indexMonitorResponse(channel, request.method()))
         }

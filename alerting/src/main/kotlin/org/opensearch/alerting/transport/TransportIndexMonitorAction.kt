@@ -112,6 +112,7 @@ class TransportIndexMonitorAction @Inject constructor(
     }
 
     override fun doExecute(task: Task, request: IndexMonitorRequest, actionListener: ActionListener<IndexMonitorResponse>) {
+        log.info("hurneyt TransportIndexMonitorAction::doExecute START")
         val user = readUserFromThreadContext(client)
 
         if (!validateUserBackendRoles(user, actionListener)) {
@@ -124,6 +125,7 @@ class TransportIndexMonitorAction @Inject constructor(
             // check if user has access to any anomaly detector for AD monitor
             checkAnomalyDetectorAndExecute(client, actionListener, request, user)
         }
+        log.info("hurneyt TransportIndexMonitorAction::doExecute END")
     }
 
     /**
