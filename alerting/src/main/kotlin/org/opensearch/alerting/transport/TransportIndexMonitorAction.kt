@@ -147,6 +147,7 @@ class TransportIndexMonitorAction @Inject constructor(
         }
         val searchRequest = SearchRequest().indices(*indices.toTypedArray())
             .source(SearchSourceBuilder.searchSource().size(1).query(QueryBuilders.matchAllQuery()))
+        log.info("hurneyt checkIndicesAndExecute searchRequest = $searchRequest")
         client.search(
             searchRequest,
             object : ActionListener<SearchResponse> {
