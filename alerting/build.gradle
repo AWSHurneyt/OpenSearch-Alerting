@@ -247,7 +247,7 @@ task integTestRemote(type: RestIntegTestTask) {
 }
 integTestRemote.enabled = System.getProperty("tests.rest.cluster") != null
 
-String bwcVersion = "1.0.0.0"
+String bwcVersion = "1.1.0.0"
 String baseName = "alertingBwcCluster"
 String bwcFilePath = "src/test/resources/bwc"
 String bwcOpenSearchPlugin = "opensearch-alerting-" + bwcVersion + ".zip"
@@ -257,7 +257,7 @@ String bwcRemoteFile = 'https://ci.opensearch.org/ci/dbc/distribution-build-open
     testClusters {
         "${baseName}$i" {
             testDistribution = "ARCHIVE"
-            versions = ["1.0.0", "2.1.0-SNAPSHOT"]
+            versions = ["1.1.0", "2.1.0-SNAPSHOT"]
             numberOfNodes = 3
             plugin(provider(new Callable<RegularFile>(){
                 @Override
