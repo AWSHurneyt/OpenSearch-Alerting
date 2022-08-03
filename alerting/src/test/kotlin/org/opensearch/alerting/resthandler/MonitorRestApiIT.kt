@@ -12,7 +12,6 @@ import org.opensearch.alerting.ALERTING_BASE_URI
 import org.opensearch.alerting.ALWAYS_RUN
 import org.opensearch.alerting.ANOMALY_DETECTOR_INDEX
 import org.opensearch.alerting.AlertingRestTestCase
-import org.opensearch.alerting.LEGACY_OPENDISTRO_ALERTING_BASE_URI
 import org.opensearch.alerting.alerts.AlertIndices
 import org.opensearch.alerting.anomalyDetectorIndexMapping
 import org.opensearch.alerting.core.model.CronSchedule
@@ -107,9 +106,9 @@ class MonitorRestApiIT : AlertingRestTestCase() {
         assertEquals("Incorrect Location header", "$ALERTING_BASE_URI/$createdId", createResponse.getHeader("Location"))
     }
 
-    fun `test creating a monitor with legacy ODFE`() {
+    fun `test creating a monitor for 1-0-0-0 version backwards compatibility`() {
         val monitor = randomQueryLevelMonitor()
-        val createResponse = client().makeRequest("POST", LEGACY_OPENDISTRO_ALERTING_BASE_URI, emptyMap(), monitor.toHttpEntity())
+        val createResponse = client().makeRequest("POST", ALERTING_BASE_URI, emptyMap(), monitor.toHttpEntity())
         assertEquals("Create monitor failed", RestStatus.CREATED, createResponse.restStatus())
         val responseBody = createResponse.asMap()
         val createdId = responseBody["_id"] as String

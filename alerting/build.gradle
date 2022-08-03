@@ -247,17 +247,17 @@ task integTestRemote(type: RestIntegTestTask) {
 }
 integTestRemote.enabled = System.getProperty("tests.rest.cluster") != null
 
-String bwcVersion = "1.13.1.0"
+String bwcVersion = "1.0.0.0"
 String baseName = "alertingBwcCluster"
 String bwcFilePath = "src/test/resources/bwc"
-String bwcOpenDistroPlugin = "opendistro-alerting-" + bwcVersion + ".zip"
-String bwcRemoteFile = 'https://d3g5vo6xdbdb9a.cloudfront.net/downloads/elasticsearch-plugins/opendistro-alerting/' + bwcOpenDistroPlugin
+String bwcOpenDistroPlugin = "opensearch-alerting-" + bwcVersion + ".zip"
+String bwcRemoteFile = 'https://ci.opensearch.org/ci/dbc/distribution-build-opensearch/1.0.0/latest/linux/x64/tar/builds/opensearch/plugins/' + bwcOpenDistroPlugin
 
 2.times {i ->
     testClusters {
         "${baseName}$i" {
             testDistribution = "ARCHIVE"
-            versions = ["7.10.2","2.1.0-SNAPSHOT"]
+            versions = ["2.1.0-SNAPSHOT"]
             numberOfNodes = 3
             plugin(provider(new Callable<RegularFile>(){
                 @Override
