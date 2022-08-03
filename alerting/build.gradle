@@ -183,7 +183,7 @@ testClusters.integTest {
 }
 
 testClusters.integTest.nodes.each { node ->
-    node.setting("opendistro.destination.host.deny_list", "[\"10.0.0.0/8\", \"127.0.0.1\"]")
+    node.setting("plugins.destination.host.deny_list", "[\"10.0.0.0/8\", \"127.0.0.1\"]")
 }
 
 integTest {
@@ -250,8 +250,8 @@ integTestRemote.enabled = System.getProperty("tests.rest.cluster") != null
 String bwcVersion = "1.0.0.0"
 String baseName = "alertingBwcCluster"
 String bwcFilePath = "src/test/resources/bwc"
-String bwcOpenDistroPlugin = "opensearch-alerting-" + bwcVersion + ".zip"
-String bwcRemoteFile = 'https://ci.opensearch.org/ci/dbc/distribution-build-opensearch/1.0.0/latest/linux/x64/tar/builds/opensearch/plugins/' + bwcOpenDistroPlugin
+String bwcOpenSearchPlugin = "opensearch-alerting-" + bwcVersion + ".zip"
+String bwcRemoteFile = 'https://ci.opensearch.org/ci/dbc/distribution-build-opensearch/1.0.0/latest/linux/x64/tar/builds/opensearch/plugins/' + bwcOpenSearchPlugin
 
 2.times {i ->
     testClusters {
@@ -270,7 +270,7 @@ String bwcRemoteFile = 'https://ci.opensearch.org/ci/dbc/distribution-build-open
                             if (!dir.exists()) {
                                 dir.mkdirs()
                             }
-                            File f = new File(dir, bwcOpenDistroPlugin)
+                            File f = new File(dir, bwcOpenSearchPlugin)
                             if (!f.exists()) {
                                 new URL(bwcRemoteFile).withInputStream{ ins -> f.withOutputStream{ it << ins }}
                             }
