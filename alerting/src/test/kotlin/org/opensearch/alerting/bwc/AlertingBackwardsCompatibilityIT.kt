@@ -52,22 +52,17 @@ class AlertingBackwardsCompatibilityIT : AlertingRestTestCase() {
             val pluginNames = plugins.map { plugin -> plugin["name"] }.toSet()
             when (CLUSTER_TYPE) {
                 ClusterType.OLD -> {
-                    this.logger.info("hurneyt test backwards compatibility OLD start")
                     assertTrue(pluginNames.contains("opensearch-alerting"))
                     createBasicMonitor()
-                    this.logger.info("hurneyt test backwards compatibility OLD finish")
                 }
                 ClusterType.MIXED -> {
-                    this.logger.info("hurneyt test backwards compatibility MIXED start")
                     assertTrue(pluginNames.contains("opensearch-alerting"))
                     verifyMonitorExists(ALERTING_BASE_URI)
                     // TODO: Need to move the base URI being used here into a constant and rename ALERTING_BASE_URI to
                     //  MONITOR_BASE_URI
                     verifyMonitorStats("/_plugins/_alerting")
-                    this.logger.info("hurneyt test backwards compatibility MIXED finish")
                 }
                 ClusterType.UPGRADED -> {
-                    this.logger.info("hurneyt test backwards compatibility UPGRADED start")
                     assertTrue(pluginNames.contains("opensearch-alerting"))
                     verifyMonitorExists(ALERTING_BASE_URI)
                     // TODO: Change the next execution time of the Monitor manually instead since this inflates
@@ -76,7 +71,6 @@ class AlertingBackwardsCompatibilityIT : AlertingRestTestCase() {
                     // on time
                     Thread.sleep(60000)
                     verifyMonitorStats("/_plugins/_alerting")
-                    this.logger.info("hurneyt test backwards compatibility UPGRADED finish")
                 }
             }
             break
