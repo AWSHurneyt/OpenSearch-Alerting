@@ -13,6 +13,7 @@ import org.opensearch.action.support.ActionFilters
 import org.opensearch.action.support.HandledTransportAction
 import org.opensearch.alerting.action.SearchMonitorAction
 import org.opensearch.alerting.action.SearchMonitorRequest
+import org.opensearch.alerting.alerts.AlertIndices.Companion.ALL_ALERT_INDEX_PATTERN
 import org.opensearch.alerting.opensearchapi.addFilter
 import org.opensearch.alerting.settings.AlertingSettings
 import org.opensearch.alerting.util.AlertingException
@@ -21,6 +22,7 @@ import org.opensearch.cluster.service.ClusterService
 import org.opensearch.common.inject.Inject
 import org.opensearch.common.settings.Settings
 import org.opensearch.commons.alerting.model.Monitor
+import org.opensearch.commons.alerting.model.ScheduledJob
 import org.opensearch.commons.authuser.User
 import org.opensearch.index.query.BoolQueryBuilder
 import org.opensearch.index.query.ExistsQueryBuilder
@@ -52,9 +54,17 @@ class TransportSearchMonitorAction @Inject constructor(
 
     override fun doExecute(task: Task, searchMonitorRequest: SearchMonitorRequest, actionListener: ActionListener<SearchResponse>) {
         val searchSourceBuilder = searchMonitorRequest.searchRequest.source()
-        val queryBuilder = if (searchSourceBuilder.query() == null) BoolQueryBuilder()
-        else QueryBuilders.boolQuery().must(searchSourceBuilder.query())
-        queryBuilder.filter(QueryBuilders.existsQuery(Monitor.MONITOR_TYPE))
+            .seqNoAndPrimaryTerm(true)
+            .version(true)
+        val queryBuilder = QueryBuilders.boolQuery().must(searchSourceBuilder.query())
+
+        // The SearchMonitor API supports one 'index' parameter of either the SCHEDULED_JOBS_INDEX or ALL_ALERT_INDEX_PATTERN.
+        // When querying the ALL_ALERT_INDEX_PATTERN, we don't want to check whether the MONITOR_TYPE field exists
+        // because we're querying alert indexes.
+        if (searchMonitorRequest.searchRequest.indices().contains(ScheduledJob.SCHEDULED_JOBS_INDEX)) {
+            queryBuilder.filter(QueryBuilders.existsQuery(Monitor.MONITOR_TYPE))
+        }
+
         searchSourceBuilder.query(queryBuilder)
             .seqNoAndPrimaryTerm(true)
             .version(true)
