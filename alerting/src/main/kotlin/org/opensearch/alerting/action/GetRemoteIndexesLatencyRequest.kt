@@ -74,8 +74,9 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
         if (indexes.isEmpty()) return "Request contains an empty list of indexes."
         val isValid = indexes.any {
             log.info("hurneyt validateIndexNames indexName = $it")
-            !VALID_INDEX_NAME_REGEX.containsMatchIn(it)
+            VALID_INDEX_NAME_REGEX.containsMatchIn(it)
         }
+        log.info("hurneyt validateIndexNames isValid = $isValid")
         return if (isValid) null else "Request contains an invalid index name."
     }
 
