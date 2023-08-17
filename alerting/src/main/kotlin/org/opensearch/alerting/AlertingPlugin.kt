@@ -13,6 +13,8 @@ import org.opensearch.alerting.action.GetDestinationsAction
 import org.opensearch.alerting.action.GetEmailAccountAction
 import org.opensearch.alerting.action.GetEmailGroupAction
 import org.opensearch.alerting.action.GetMonitorAction
+import org.opensearch.alerting.action.GetRemoteClustersAction
+import org.opensearch.alerting.action.GetRemoteIndexesAction
 import org.opensearch.alerting.action.SearchEmailAccountAction
 import org.opensearch.alerting.action.SearchEmailGroupAction
 import org.opensearch.alerting.action.SearchMonitorAction
@@ -37,6 +39,8 @@ import org.opensearch.alerting.resthandler.RestGetEmailAccountAction
 import org.opensearch.alerting.resthandler.RestGetEmailGroupAction
 import org.opensearch.alerting.resthandler.RestGetFindingsAction
 import org.opensearch.alerting.resthandler.RestGetMonitorAction
+import org.opensearch.alerting.resthandler.RestGetRemoteClustersAction
+import org.opensearch.alerting.resthandler.RestGetRemoteIndexesAction
 import org.opensearch.alerting.resthandler.RestGetWorkflowAction
 import org.opensearch.alerting.resthandler.RestGetWorkflowAlertsAction
 import org.opensearch.alerting.resthandler.RestIndexMonitorAction
@@ -62,6 +66,8 @@ import org.opensearch.alerting.transport.TransportGetEmailAccountAction
 import org.opensearch.alerting.transport.TransportGetEmailGroupAction
 import org.opensearch.alerting.transport.TransportGetFindingsSearchAction
 import org.opensearch.alerting.transport.TransportGetMonitorAction
+import org.opensearch.alerting.transport.TransportGetRemoteClustersAction
+import org.opensearch.alerting.transport.TransportGetRemoteIndexesAction
 import org.opensearch.alerting.transport.TransportGetWorkflowAction
 import org.opensearch.alerting.transport.TransportGetWorkflowAlertsAction
 import org.opensearch.alerting.transport.TransportIndexMonitorAction
@@ -136,6 +142,7 @@ internal class AlertingPlugin : PainlessExtension, ActionPlugin, ScriptPlugin, R
 
         @JvmField val MONITOR_BASE_URI = "/_plugins/_alerting/monitors"
         @JvmField val WORKFLOW_BASE_URI = "/_plugins/_alerting/workflows"
+        @JvmField val REMOTE_BASE_URI = "/_plugins/_alerting/remote"
         @JvmField val DESTINATION_BASE_URI = "/_plugins/_alerting/destinations"
 
         @JvmField val LEGACY_OPENDISTRO_MONITOR_BASE_URI = "/_opendistro/_alerting/monitors"
@@ -194,7 +201,9 @@ internal class AlertingPlugin : PainlessExtension, ActionPlugin, ScriptPlugin, R
             RestGetWorkflowAlertsAction(),
             RestGetFindingsAction(),
             RestGetWorkflowAction(),
-            RestDeleteWorkflowAction()
+            RestDeleteWorkflowAction(),
+            RestGetRemoteClustersAction(),
+            RestGetRemoteIndexesAction()
         )
     }
 
@@ -221,7 +230,9 @@ internal class AlertingPlugin : PainlessExtension, ActionPlugin, ScriptPlugin, R
             ActionPlugin.ActionHandler(AlertingActions.INDEX_WORKFLOW_ACTION_TYPE, TransportIndexWorkflowAction::class.java),
             ActionPlugin.ActionHandler(AlertingActions.GET_WORKFLOW_ACTION_TYPE, TransportGetWorkflowAction::class.java),
             ActionPlugin.ActionHandler(AlertingActions.DELETE_WORKFLOW_ACTION_TYPE, TransportDeleteWorkflowAction::class.java),
-            ActionPlugin.ActionHandler(ExecuteWorkflowAction.INSTANCE, TransportExecuteWorkflowAction::class.java)
+            ActionPlugin.ActionHandler(ExecuteWorkflowAction.INSTANCE, TransportExecuteWorkflowAction::class.java),
+            ActionPlugin.ActionHandler(GetRemoteClustersAction.INSTANCE, TransportGetRemoteClustersAction::class.java),
+            ActionPlugin.ActionHandler(GetRemoteIndexesAction.INSTANCE, TransportGetRemoteIndexesAction::class.java)
         )
     }
 
