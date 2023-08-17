@@ -36,6 +36,7 @@ class RestGetRemoteIndexesLatencyAction : BaseRestHandler() {
 
         val indexes = request.param("clusters")
 
+        log.info("hurneyt RestGetRemoteIndexesLatencyAction request.params.keys = ${request.params().keys.joinToString(", ")}")
         log.info("hurneyt RestGetRemoteIndexesLatencyAction indexes = $indexes")
         return RestChannelConsumer {
                 channel ->
