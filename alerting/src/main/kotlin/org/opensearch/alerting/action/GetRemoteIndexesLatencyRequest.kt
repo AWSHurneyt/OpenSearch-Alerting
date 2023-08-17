@@ -72,7 +72,10 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
 
     private fun validateIndexNames(indexes: List<String>): String? {
         if (indexes.isEmpty()) return "Request contains an empty list of indexes."
-        val isValid = indexes.any { !VALID_INDEX_NAME_REGEX.containsMatchIn(it) }
+        val isValid = indexes.any {
+            log.info("hurneyt validateIndexNames indexName = $it")
+            !VALID_INDEX_NAME_REGEX.containsMatchIn(it)
+        }
         return if (isValid) null else "Request contains an invalid index name."
     }
 
