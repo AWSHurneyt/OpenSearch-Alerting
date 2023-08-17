@@ -15,6 +15,7 @@ import org.opensearch.alerting.action.GetEmailGroupAction
 import org.opensearch.alerting.action.GetMonitorAction
 import org.opensearch.alerting.action.GetRemoteClustersAction
 import org.opensearch.alerting.action.GetRemoteIndexesAction
+import org.opensearch.alerting.action.GetRemoteIndexesLatencyAction
 import org.opensearch.alerting.action.SearchEmailAccountAction
 import org.opensearch.alerting.action.SearchEmailGroupAction
 import org.opensearch.alerting.action.SearchMonitorAction
@@ -41,6 +42,7 @@ import org.opensearch.alerting.resthandler.RestGetFindingsAction
 import org.opensearch.alerting.resthandler.RestGetMonitorAction
 import org.opensearch.alerting.resthandler.RestGetRemoteClustersAction
 import org.opensearch.alerting.resthandler.RestGetRemoteIndexesAction
+import org.opensearch.alerting.resthandler.RestGetRemoteIndexesLatencyAction
 import org.opensearch.alerting.resthandler.RestGetWorkflowAction
 import org.opensearch.alerting.resthandler.RestGetWorkflowAlertsAction
 import org.opensearch.alerting.resthandler.RestIndexMonitorAction
@@ -68,6 +70,7 @@ import org.opensearch.alerting.transport.TransportGetFindingsSearchAction
 import org.opensearch.alerting.transport.TransportGetMonitorAction
 import org.opensearch.alerting.transport.TransportGetRemoteClustersAction
 import org.opensearch.alerting.transport.TransportGetRemoteIndexesAction
+import org.opensearch.alerting.transport.TransportGetRemoteIndexesLatencyAction
 import org.opensearch.alerting.transport.TransportGetWorkflowAction
 import org.opensearch.alerting.transport.TransportGetWorkflowAlertsAction
 import org.opensearch.alerting.transport.TransportIndexMonitorAction
@@ -203,7 +206,8 @@ internal class AlertingPlugin : PainlessExtension, ActionPlugin, ScriptPlugin, R
             RestGetWorkflowAction(),
             RestDeleteWorkflowAction(),
             RestGetRemoteClustersAction(),
-            RestGetRemoteIndexesAction()
+            RestGetRemoteIndexesAction(),
+            RestGetRemoteIndexesLatencyAction()
         )
     }
 
@@ -232,7 +236,8 @@ internal class AlertingPlugin : PainlessExtension, ActionPlugin, ScriptPlugin, R
             ActionPlugin.ActionHandler(AlertingActions.DELETE_WORKFLOW_ACTION_TYPE, TransportDeleteWorkflowAction::class.java),
             ActionPlugin.ActionHandler(ExecuteWorkflowAction.INSTANCE, TransportExecuteWorkflowAction::class.java),
             ActionPlugin.ActionHandler(GetRemoteClustersAction.INSTANCE, TransportGetRemoteClustersAction::class.java),
-            ActionPlugin.ActionHandler(GetRemoteIndexesAction.INSTANCE, TransportGetRemoteIndexesAction::class.java)
+            ActionPlugin.ActionHandler(GetRemoteIndexesAction.INSTANCE, TransportGetRemoteIndexesAction::class.java),
+            ActionPlugin.ActionHandler(GetRemoteIndexesLatencyAction.INSTANCE, TransportGetRemoteIndexesLatencyAction::class.java)
         )
     }
 
