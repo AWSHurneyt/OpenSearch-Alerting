@@ -5,6 +5,7 @@
 
 package org.opensearch.alerting.action
 
+import org.apache.logging.log4j.LogManager
 import org.opensearch.action.ActionRequest
 import org.opensearch.action.ActionRequestValidationException
 import org.opensearch.action.ValidateActions
@@ -19,6 +20,8 @@ import org.opensearch.core.xcontent.ToXContentObject
 import org.opensearch.core.xcontent.XContentBuilder
 import org.opensearch.core.xcontent.XContentParser
 import java.io.IOException
+
+private val log = LogManager.getLogger(GetRemoteIndexesLatencyRequest::class.java)
 
 class GetRemoteIndexesLatencyRequest : ActionRequest {
     val indexes: List<RemoteIndex>
@@ -81,11 +84,13 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
         @JvmOverloads
         @Throws(IOException::class)
         fun parse(xcp: XContentParser): GetRemoteIndexesLatencyRequest {
+            log.info("hurneyt GetRemoteIndexesLatencyRequest::parse START")
             val remoteIndexes = mutableListOf<RemoteIndex>()
 
             ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp)
             while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
                 val fieldName = xcp.currentName()
+                log.info("hurneyt GetRemoteIndexesLatencyRequest::parse fieldName = $fieldName")
                 xcp.nextToken()
 
                 when (fieldName) {
@@ -104,6 +109,7 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
 
             require(!remoteIndexes.isNullOrEmpty()) { "Cluster and indexes list cannot be null or empty." }
 
+            log.info("hurneyt GetRemoteIndexesLatencyRequest::parse END")
             return GetRemoteIndexesLatencyRequest(remoteIndexes)
         }
     }
@@ -145,12 +151,14 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
             @JvmOverloads
             @Throws(IOException::class)
             fun parse(xcp: XContentParser): RemoteIndex {
+                log.info("hurneyt RemoteIndex::parse START")
                 var clusterAlias: String? = null
                 var indexes: List<String>? = null
 
                 ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp)
                 while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
                     val fieldName = xcp.currentName()
+                    log.info("hurneyt RemoteIndex::parse fieldName = $fieldName")
                     xcp.nextToken()
 
                     when (fieldName) {
@@ -162,6 +170,7 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
                 requireNotNull(clusterAlias) { "Cluster alias cannot be null." }
                 require(!indexes.isNullOrEmpty()) { "Indexes cannot be null or empty." }
 
+                log.info("hurneyt RemoteIndex::parse END")
                 return RemoteIndex(
                     clusterAlias = clusterAlias,
                     indexes = indexes

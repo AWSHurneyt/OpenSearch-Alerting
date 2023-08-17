@@ -46,20 +46,25 @@ class RestGetRemoteIndexesAction : BaseRestHandler() {
     }
 
     private fun getClusterAliases(xcp: XContentParser): List<String> {
+        log.info("hurneyt RestGetRemoteIndexesAction::getClusterAliases START")
         val clusterAliases = mutableListOf<String>()
         ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.nextToken(), xcp)
         while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
             val fieldName = xcp.currentName()
+            log.info("hurneyt RestGetRemoteIndexesAction::getClusterAliases fieldName = $fieldName")
             xcp.nextToken()
             when (fieldName) {
                 GetRemoteIndexesRequest.CLUSTERS_FIELD -> {
                     ensureExpectedToken(XContentParser.Token.START_ARRAY, xcp.currentToken(), xcp)
                     while (xcp.nextToken() != XContentParser.Token.END_ARRAY) {
+                        log.info("hurneyt RestGetRemoteIndexesAction::getClusterAliases xcp.text() = ${xcp.text()}")
                         clusterAliases.add(xcp.text())
                     }
                 }
             }
         }
+        log.info("hurneyt RestGetRemoteIndexesAction::getClusterAliases END")
+        log.info("hurneyt RestGetRemoteIndexesAction::getClusterAliases clusterAliases = ${clusterAliases.joinToString(", ")}")
         return clusterAliases
     }
 }
