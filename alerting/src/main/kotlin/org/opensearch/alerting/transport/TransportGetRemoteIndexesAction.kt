@@ -31,6 +31,7 @@ import org.opensearch.tasks.Task
 import org.opensearch.transport.TransportService
 import java.time.Duration
 import java.time.Instant
+import kotlin.streams.toList
 
 private val log = LogManager.getLogger(TransportGetRemoteIndexesAction::class.java)
 private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
@@ -53,27 +54,27 @@ class TransportGetRemoteIndexesAction @Inject constructor(
         request: GetRemoteIndexesRequest,
         listener: ActionListener<GetRemoteIndexesResponse>
     ) {
-        var clusterAliases = transportService.remoteClusterService.remoteConnectionInfos
+        var clusterAliases = transportService.remoteClusterService.remoteConnectionInfos.toList()
 
         // If clusters are specified, filter out unspecified clusters
         if (request.clusterAliases.isNotEmpty())
-            clusterAliases = clusterAliases.filter { request.clusterAliases.contains(it.clusterAlias) }
+            clusterAliases = clusterAliases.filter { request.clusterAliases.contains(it.clusterAlias) }.toList()
 
         client.threadPool().threadContext.stashContext().use {
-            val clusterInfos = mutableListOf<ClusterInfo>()
-            try {
-                clusterAliases.forEach {
-                    if (it.isConnected) {
-                        scope.launch {
+            scope.launch {
+                val clusterInfos = mutableListOf<ClusterInfo>()
+                try {
+                    clusterAliases.forEach {
+                        if (it.isConnected) {
                             clusterInfos.add(getRemoteIndexes(it.clusterAlias))
                         }
                     }
+                } catch (e: Exception) {
+                    log.error("Failed to retrieve index stats for request $request", e)
+                    listener.onFailure(AlertingException.wrap(e))
                 }
-            } catch (e: Exception) {
-                log.error("Failed to retrieve index stats for request $request", e)
-                listener.onFailure(AlertingException.wrap(e))
+                listener.onResponse(GetRemoteIndexesResponse(clusters = clusterInfos))
             }
-            listener.onResponse(GetRemoteIndexesResponse(clusters = clusterInfos))
         }
     }
 

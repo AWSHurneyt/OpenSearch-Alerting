@@ -55,22 +55,22 @@ class TransportGetRemoteIndexesLatencyAction @Inject constructor(
         val remoteClusterIndexes = request.indexes
         client.threadPool().threadContext.stashContext().use {
             val clusterIndexes = mutableListOf<RemoteIndexesLatency>()
-            remoteClusterIndexes.forEach {
-                val remoteClient = client.getRemoteClusterClient(it.clusterAlias)
-                val indexLatencyInfos = mutableListOf<IndexLatencyInfo>()
-                it.indexes.forEach { indexName ->
-                    scope.launch {
+            scope.launch {
+                remoteClusterIndexes.forEach {
+                    val remoteClient = client.getRemoteClusterClient(it.clusterAlias)
+                    val indexLatencyInfos = mutableListOf<IndexLatencyInfo>()
+                    it.indexes.forEach { indexName ->
                         val latency = getLatency(indexName, remoteClient, listener)
                         indexLatencyInfos.add(IndexLatencyInfo(indexName, latency))
                     }
+                    val indexLatencyInfosStrings = indexLatencyInfos.map { entry ->
+                        "{ ${entry.index} - ${entry.latency} }"
+                    }
+                    log.info("hurneyt TransportGetRemoteIndexesLatencyAction indexLatencyInfosStrings = ${indexLatencyInfosStrings.joinToString(", ")}")
+                    clusterIndexes.add(RemoteIndexesLatency(it.clusterAlias, indexLatencyInfos))
                 }
-                val indexLatencyInfosStrings = indexLatencyInfos.map { entry ->
-                    "{ ${entry.index} - ${entry.latency} }"
-                }
-                log.info("hurneyt TransportGetRemoteIndexesLatencyAction indexLatencyInfosStrings = ${indexLatencyInfosStrings.joinToString(", ")}")
-                clusterIndexes.add(RemoteIndexesLatency(it.clusterAlias, indexLatencyInfos))
+                listener.onResponse(GetRemoteIndexesLatencyResponse(clusterIndexes))
             }
-            listener.onResponse(GetRemoteIndexesLatencyResponse(clusterIndexes))
         }
     }
 
