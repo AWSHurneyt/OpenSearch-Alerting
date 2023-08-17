@@ -56,7 +56,7 @@ class TransportGetRemoteIndexesLatencyAction @Inject constructor(
         client.threadPool().threadContext.stashContext().use {
             val clusterIndexes = mutableListOf<RemoteIndexesLatency>()
             remoteClusterIndexes.forEach {
-                val remoteClient = client.getRemoteClusterClient(it.clusterAlias)
+                val remoteClient = client.getRemoteClusterClient(clusterService.clusterName.value())
                 val indexLatencyInfos = mutableListOf<IndexLatencyInfo>()
                 it.indexes.forEach { indexName ->
                     scope.launch {
