@@ -11,7 +11,9 @@ import org.opensearch.alerting.action.GetRemoteIndexesLatencyAction
 import org.opensearch.alerting.action.GetRemoteIndexesLatencyRequest
 import org.opensearch.client.node.NodeClient
 import org.opensearch.rest.BaseRestHandler
+import org.opensearch.rest.RestHandler
 import org.opensearch.rest.RestRequest
+import org.opensearch.rest.RestRequest.Method.GET
 import org.opensearch.rest.action.RestToXContentListener
 
 private val log = LogManager.getLogger(RestGetRemoteIndexesLatencyAction::class.java)
@@ -21,6 +23,12 @@ class RestGetRemoteIndexesLatencyAction : BaseRestHandler() {
 
     override fun getName(): String {
         return "get_remote_indexes_latency_action"
+    }
+
+    override fun routes(): List<RestHandler.Route> {
+        return mutableListOf(
+            RestHandler.Route(GET, ROUTE)
+        )
     }
 
     override fun prepareRequest(request: RestRequest, client: NodeClient): RestChannelConsumer {
