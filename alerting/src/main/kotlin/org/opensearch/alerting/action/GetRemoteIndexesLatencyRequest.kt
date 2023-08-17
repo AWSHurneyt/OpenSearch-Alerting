@@ -14,7 +14,6 @@ import org.opensearch.common.io.stream.StreamInput
 import org.opensearch.common.io.stream.StreamOutput
 import org.opensearch.common.io.stream.Writeable
 import org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken
-import org.opensearch.commons.utils.stringList
 import org.opensearch.core.xcontent.ToXContent
 import org.opensearch.core.xcontent.ToXContentObject
 import org.opensearch.core.xcontent.XContentBuilder
@@ -87,6 +86,7 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
             log.info("hurneyt GetRemoteIndexesLatencyRequest::parse START")
             val remoteIndexes = mutableListOf<RemoteIndex>()
 
+            log.info("hurneyt GetRemoteIndexesLatencyRequest::parse xcp.currentToken() = ${xcp.currentToken().name}")
             ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp)
             while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
                 val fieldName = xcp.currentName()
@@ -95,11 +95,7 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
 
                 when (fieldName) {
                     CLUSTERS_FIELD -> {
-                        ensureExpectedToken(
-                            XContentParser.Token.START_ARRAY,
-                            xcp.currentToken(),
-                            xcp
-                        )
+                        ensureExpectedToken(XContentParser.Token.START_ARRAY, xcp.currentToken(), xcp)
                         while (xcp.nextToken() != XContentParser.Token.END_ARRAY) {
                             remoteIndexes.add(RemoteIndex.parse(xcp))
                         }
@@ -153,7 +149,7 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
             fun parse(xcp: XContentParser): RemoteIndex {
                 log.info("hurneyt RemoteIndex::parse START")
                 var clusterAlias: String? = null
-                var indexes: List<String>? = null
+                val indexes = mutableListOf<String>()
 
                 ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp)
                 while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
@@ -163,7 +159,12 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
 
                     when (fieldName) {
                         CLUSTER_ALIAS_FIELD -> clusterAlias = xcp.text()
-                        INDEXES_FIELD -> indexes = xcp.stringList()
+                        INDEXES_FIELD -> {
+                            ensureExpectedToken(XContentParser.Token.START_ARRAY, xcp.currentToken(), xcp)
+                            while (xcp.nextToken() != XContentParser.Token.END_ARRAY) {
+                                indexes.add(xcp.text())
+                            }
+                        }
                     }
                 }
 
@@ -171,10 +172,7 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
                 require(!indexes.isNullOrEmpty()) { "Indexes cannot be null or empty." }
 
                 log.info("hurneyt RemoteIndex::parse END")
-                return RemoteIndex(
-                    clusterAlias = clusterAlias,
-                    indexes = indexes
-                )
+                return RemoteIndex(clusterAlias, indexes)
             }
         }
     }
