@@ -90,7 +90,7 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
             log.info("hurneyt GetRemoteIndexesLatencyRequest::parse xcp.map.keys = ${xcp?.map()?.keys?.joinToString(", ")}")
             log.info("hurneyt GetRemoteIndexesLatencyRequest::parse xcp.currentToken() = ${xcp?.currentToken()?.name}")
 
-            ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp)
+            ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.nextToken(), xcp)
             while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
                 val fieldName = xcp.currentName()
                 log.info("hurneyt GetRemoteIndexesLatencyRequest::parse fieldName = $fieldName")
