@@ -64,6 +64,10 @@ class TransportGetRemoteIndexesLatencyAction @Inject constructor(
                         indexLatencyInfos.add(IndexLatencyInfo(indexName, latency))
                     }
                 }
+                val indexLatencyInfosStrings = indexLatencyInfos.map { entry ->
+                    "{ ${entry.index} - ${entry.latency} }"
+                }
+                log.info("hurneyt TransportGetRemoteIndexesLatencyAction indexLatencyInfosStrings = ${indexLatencyInfosStrings.joinToString(", ")}")
                 clusterIndexes.add(RemoteIndexesLatency(it.clusterAlias, indexLatencyInfos))
             }
             listener.onResponse(GetRemoteIndexesLatencyResponse(clusterIndexes))
