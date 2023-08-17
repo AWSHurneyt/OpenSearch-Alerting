@@ -86,7 +86,10 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
             log.info("hurneyt GetRemoteIndexesLatencyRequest::parse START")
             val remoteIndexes = mutableListOf<RemoteIndex>()
 
-            log.info("hurneyt GetRemoteIndexesLatencyRequest::parse xcp.currentToken() = ${xcp.currentToken().name}")
+            log.info("hurneyt GetRemoteIndexesLatencyRequest::parse xcp == null = ${xcp == null}")
+            log.info("hurneyt GetRemoteIndexesLatencyRequest::parse xcp.map.keys = ${xcp?.map()?.keys?.joinToString(", ")}")
+            log.info("hurneyt GetRemoteIndexesLatencyRequest::parse xcp.currentToken() = ${xcp?.currentToken()?.name}")
+
             ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp)
             while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
                 val fieldName = xcp.currentName()

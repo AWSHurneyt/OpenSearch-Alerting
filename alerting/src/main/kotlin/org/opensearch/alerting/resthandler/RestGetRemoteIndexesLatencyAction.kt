@@ -33,11 +33,6 @@ class RestGetRemoteIndexesLatencyAction : BaseRestHandler() {
 
     override fun prepareRequest(request: RestRequest, client: NodeClient): RestChannelConsumer {
         log.debug("${request.method()} $ROUTE")
-
-        val indexes = request.param("clusters")
-
-        log.info("hurneyt RestGetRemoteIndexesLatencyAction request.params.keys = ${request.params().keys.joinToString(", ")}")
-        log.info("hurneyt RestGetRemoteIndexesLatencyAction indexes = $indexes")
         return RestChannelConsumer {
                 channel ->
             client.execute(
