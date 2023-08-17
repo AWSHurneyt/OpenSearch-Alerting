@@ -56,11 +56,11 @@ class TransportGetRemoteIndexesLatencyAction @Inject constructor(
         client.threadPool().threadContext.stashContext().use {
             val clusterIndexes = mutableListOf<RemoteIndexesLatency>()
             remoteClusterIndexes.forEach {
-                val remoteClient = client.getRemoteClusterClient(clusterService.clusterName.value())
+                val remoteClient = client.getRemoteClusterClient(it.clusterAlias)
                 val indexLatencyInfos = mutableListOf<IndexLatencyInfo>()
                 it.indexes.forEach { indexName ->
                     scope.launch {
-                        val latency = getLatency(it.clusterAlias, indexName, remoteClient, listener)
+                        val latency = getLatency(indexName, remoteClient, listener)
                         indexLatencyInfos.add(IndexLatencyInfo(indexName, latency))
                     }
                 }
@@ -71,20 +71,18 @@ class TransportGetRemoteIndexesLatencyAction @Inject constructor(
     }
 
     private suspend fun getLatency(
-        clusterAlias: String,
         indexName: String,
         remoteClient: Client,
         listener: ActionListener<GetRemoteIndexesLatencyResponse>
     ): Long? {
-        val remoteIndexName = "$clusterAlias:$indexName"
         var latency: Long? = null
         try {
-            val searchRequest = SearchRequest().indices(remoteIndexName)
+            val searchRequest = SearchRequest().indices(indexName)
                 .source(SearchSourceBuilder.searchSource().size(1).query(QueryBuilders.matchAllQuery()))
             val searchResponse: SearchResponse = remoteClient.suspendUntil { search(searchRequest, it) }
             latency = searchResponse.took.millis
         } catch (e: Exception) {
-            log.error("Failed to retrieve latency for $remoteIndexName", e)
+            log.error("Failed to retrieve latency for $indexName", e)
             listener.onFailure(AlertingException.wrap(e))
         }
         return latency
