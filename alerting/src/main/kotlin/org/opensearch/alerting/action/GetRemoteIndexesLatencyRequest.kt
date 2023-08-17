@@ -173,6 +173,7 @@ class GetRemoteIndexesLatencyRequest : ActionRequest {
                 requireNotNull(clusterAlias) { "Cluster alias cannot be null." }
                 require(!indexes.isNullOrEmpty()) { "Indexes cannot be null or empty." }
 
+                log.info("hurneyt RemoteIndex::parse indexes = ${indexes.joinToString(", ")}")
                 log.info("hurneyt RemoteIndex::parse END")
                 return RemoteIndex(clusterAlias, indexes)
             }
