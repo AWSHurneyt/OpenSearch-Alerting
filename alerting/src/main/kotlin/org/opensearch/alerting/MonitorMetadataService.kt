@@ -217,7 +217,7 @@ object MonitorMetadataService :
         try {
             if (index == null) return mutableMapOf()
             val getIndexRequest = GetIndexRequest().indices(index)
-            val getIndexResponse: GetIndexResponse = client.suspendUntil {
+            val getIndexResponse: GetIndexResponse = getClient(index).suspendUntil {
                 client.admin().indices().getIndex(getIndexRequest, it)
             }
             val indices = getIndexResponse.indices()
@@ -229,7 +229,7 @@ object MonitorMetadataService :
             }
         } catch (e: RemoteTransportException) {
             val unwrappedException = ExceptionsHelper.unwrapCause(e) as Exception
-            throw AlertingException("Failed fetching index stats", RestStatus.INTERNAL_SERVER_ERROR, unwrappedException)
+            throw AlertingException("Failed fetching index stats hurneyt 1", RestStatus.INTERNAL_SERVER_ERROR, unwrappedException)
         } catch (e: OpenSearchSecurityException) {
             throw AlertingException(
                 "Failed fetching index stats - missing required index permissions: ${e.localizedMessage}",
@@ -237,7 +237,7 @@ object MonitorMetadataService :
                 e
             )
         } catch (e: Exception) {
-            throw AlertingException("Failed fetching index stats", RestStatus.INTERNAL_SERVER_ERROR, e)
+            throw AlertingException("Failed fetching index stats hurneyt 2", RestStatus.INTERNAL_SERVER_ERROR, e)
         }
         return lastRunContext
     }
