@@ -217,7 +217,7 @@ class DocLevelMonitorQueries(private val client: Client, private val clusterServ
                 )
             } else {
                 val resp: ClusterStateResponse = client.getRemoteClusterClient(clusterName)
-                    .suspendUntil { admin().cluster().state(ClusterStateRequest()) }
+                    .suspendUntil { admin().cluster().state(ClusterStateRequest().routingTable(false).nodes(false)) }
                 IndexUtils.resolveAllIndices(
                     indexes,
                     resp.state,
