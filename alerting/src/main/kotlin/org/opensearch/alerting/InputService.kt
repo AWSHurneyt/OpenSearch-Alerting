@@ -110,6 +110,7 @@ class InputService(
                             prevResult?.aggTriggersAfterKey
                         )
                         results += searchResponse.convertToMap()
+                        logger.info("hurneyt results = $results")
                     }
                     is ClusterMetricsInput -> {
                         logger.debug("ClusterMetricsInput clusterMetricType: ${input.clusterMetricType}")
