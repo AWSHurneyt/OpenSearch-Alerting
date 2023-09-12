@@ -298,7 +298,7 @@ object MonitorMetadataService :
     }
 
     fun parseIndexName(index: String): String {
-        return if (index.contains(":")) index.split(":").getOrElse(0) { "" }
+        return if (index.contains(":")) index.split(":").getOrElse(1) { index }
         else index
     }
 
