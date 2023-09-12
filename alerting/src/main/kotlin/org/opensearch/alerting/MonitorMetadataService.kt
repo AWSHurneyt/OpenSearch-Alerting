@@ -218,7 +218,7 @@ object MonitorMetadataService :
             if (index == null) return mutableMapOf()
             val getIndexRequest = GetIndexRequest().indices(index)
             val getIndexResponse: GetIndexResponse = getClient(index).suspendUntil {
-                client.admin().indices().getIndex(getIndexRequest, it)
+                getClient(index).admin().indices().getIndex(getIndexRequest, it)
             }
             val indices = getIndexResponse.indices()
 
