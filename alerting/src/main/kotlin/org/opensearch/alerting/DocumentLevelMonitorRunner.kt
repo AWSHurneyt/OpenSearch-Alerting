@@ -127,13 +127,21 @@ object DocumentLevelMonitorRunner : MonitorRunner() {
                 monitorCtx.clusterService!!
             )
             separatedClusterIndexes.forEach { (clusterName, indexes) ->
-                val resp: ClusterStateResponse = monitorCtx.client!!.getRemoteClusterClient(clusterName)
-                    .suspendUntil { admin().cluster().state(ClusterStateRequest()) }
-                val clusterIndexes = IndexUtils.resolveAllIndices(
-                    indexes,
-                    resp.state,
-                    MonitorRunnerService.monitorCtx.indexNameExpressionResolver!!
-                )
+                val clusterIndexes = if (clusterName == monitorCtx.clusterService!!.clusterName.value()) {
+                    IndexUtils.resolveAllIndices(
+                        indexes,
+                        monitorCtx.clusterService!!,
+                        MonitorRunnerService.monitorCtx.indexNameExpressionResolver!!
+                    )
+                } else {
+                    val resp: ClusterStateResponse = monitorCtx.client!!.getRemoteClusterClient(clusterName)
+                        .suspendUntil { admin().cluster().state(ClusterStateRequest()) }
+                    IndexUtils.resolveAllIndices(
+                        indexes,
+                        resp.state,
+                        MonitorRunnerService.monitorCtx.indexNameExpressionResolver!!
+                    )
+                }
                 indices.addAll(clusterIndexes)
             }
 

@@ -204,15 +204,26 @@ class DocLevelMonitorQueries(private val client: Client, private val clusterServ
         val queries: List<DocLevelQuery> = docLevelMonitorInput.queries
 
         val indices = mutableListOf<String>()
-        val separatedClusterIndexes = CrossClusterMonitorUtils.separateClusterIndexes(docLevelMonitorInput.indices, clusterService)
+        val separatedClusterIndexes = CrossClusterMonitorUtils.separateClusterIndexes(
+            docLevelMonitorInput.indices,
+            clusterService
+        )
         separatedClusterIndexes.forEach { (clusterName, indexes) ->
-            val resp: ClusterStateResponse = client.getRemoteClusterClient(clusterName)
-                .suspendUntil { admin().cluster().state(ClusterStateRequest()) }
-            val clusterIndexes = IndexUtils.resolveAllIndices(
-                indexes,
-                resp.state,
-                monitorCtx.indexNameExpressionResolver!!
-            )
+            val clusterIndexes = if (clusterName == clusterService.clusterName.value()) {
+                IndexUtils.resolveAllIndices(
+                    indexes,
+                    clusterService,
+                    monitorCtx.indexNameExpressionResolver!!
+                )
+            } else {
+                val resp: ClusterStateResponse = client.getRemoteClusterClient(clusterName)
+                    .suspendUntil { admin().cluster().state(ClusterStateRequest()) }
+                IndexUtils.resolveAllIndices(
+                    indexes,
+                    resp.state,
+                    monitorCtx.indexNameExpressionResolver!!
+                )
+            }
             indices.addAll(clusterIndexes)
         }
 
