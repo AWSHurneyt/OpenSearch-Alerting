@@ -214,19 +214,27 @@ object MonitorMetadataService :
         existingRunContext: MutableMap<String, MutableMap<String, Any>>? = null,
     ): MutableMap<String, MutableMap<String, Any>> {
         val lastRunContext = existingRunContext?.toMutableMap() ?: mutableMapOf()
+        log.info("hurneyt createFullRunContext START index = $index")
         try {
             if (index == null) return mutableMapOf()
             val getIndexRequest = GetIndexRequest().indices(index)
+            log.info("hurneyt createFullRunContext suspendUntil 1 START")
             val getIndexResponse: GetIndexResponse = getClient(index).suspendUntil {
-                getClient(index).admin().indices().getIndex(getIndexRequest, it)
+                admin().indices().getIndex(getIndexRequest, it)
             }
+            log.info("hurneyt createFullRunContext suspendUntil 1 END")
+
             val indices = getIndexResponse.indices()
 
+            log.info("hurneyt createFullRunContext suspendUntil 2 START")
             indices.forEach { indexName ->
+                log.info("hurneyt createFullRunContext suspendUntil indexName = $indexName")
                 if (!lastRunContext.containsKey(indexName)) {
+                    log.info("hurneyt createFullRunContext suspendUntil indexName = $indexName !CONTAINS BLOCK")
                     lastRunContext[indexName] = createRunContextForIndex(indexName)
                 }
             }
+            log.info("hurneyt createFullRunContext suspendUntil 2 END")
         } catch (e: RemoteTransportException) {
             val unwrappedException = ExceptionsHelper.unwrapCause(e) as Exception
             throw AlertingException("Failed fetching index stats hurneyt 1", RestStatus.INTERNAL_SERVER_ERROR, unwrappedException)
@@ -239,6 +247,7 @@ object MonitorMetadataService :
         } catch (e: Exception) {
             throw AlertingException("Failed fetching index stats hurneyt 2", RestStatus.INTERNAL_SERVER_ERROR, e)
         }
+        log.info("hurneyt createFullRunContext END")
         return lastRunContext
     }
 
