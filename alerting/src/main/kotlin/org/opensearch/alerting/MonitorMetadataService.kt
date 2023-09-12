@@ -217,7 +217,7 @@ object MonitorMetadataService :
         log.info("hurneyt createFullRunContext START index = $index")
         try {
             if (index == null) return mutableMapOf()
-            val getIndexRequest = GetIndexRequest().indices(index)
+            val getIndexRequest = GetIndexRequest().indices(parseIndexName(index))
             log.info("hurneyt createFullRunContext suspendUntil 1 START")
             val getIndexResponse: GetIndexResponse = getClient(index).suspendUntil {
                 admin().indices().getIndex(getIndexRequest, it)
@@ -227,11 +227,15 @@ object MonitorMetadataService :
             val indices = getIndexResponse.indices()
 
             log.info("hurneyt createFullRunContext suspendUntil 2 START")
+            val clusterAlias = parseClusterAlias(index)
+            log.info("hurneyt createFullRunContext suspendUntil clusterAlias = $clusterAlias")
             indices.forEach { indexName ->
                 log.info("hurneyt createFullRunContext suspendUntil indexName = $indexName")
-                if (!lastRunContext.containsKey(indexName)) {
+                val formattedIndex = formatClusterAndIndexNames(clusterAlias, indexName)
+                log.info("hurneyt createFullRunContext suspendUntil formattedIndex = $formattedIndex")
+                if (!lastRunContext.containsKey(formattedIndex)) {
                     log.info("hurneyt createFullRunContext suspendUntil indexName = $indexName !CONTAINS BLOCK")
-                    lastRunContext[indexName] = createRunContextForIndex(indexName)
+                    lastRunContext[indexName] = createRunContextForIndex(formattedIndex)
                 }
             }
             log.info("hurneyt createFullRunContext suspendUntil 2 END")
@@ -252,7 +256,7 @@ object MonitorMetadataService :
     }
 
     suspend fun createRunContextForIndex(index: String, createdRecently: Boolean = false): MutableMap<String, Any> {
-        val request = IndicesStatsRequest().indices(index).clear()
+        val request = IndicesStatsRequest().indices(parseIndexName(index)).clear()
         val response: IndicesStatsResponse = getClient(index).suspendUntil { execute(IndicesStatsAction.INSTANCE, request, it) }
         if (response.status != RestStatus.OK) {
             val errorMessage = "Failed fetching index stats for index:$index"
@@ -274,8 +278,7 @@ object MonitorMetadataService :
 
     fun getClient(indexName: String): Client {
         return if (indexName.contains(":")) {
-            val parsedIndex = indexName.split(":")
-            val clusterAlias = parsedIndex[0]
+            val clusterAlias = parseClusterAlias(indexName)
             if (clusterAlias == clusterService.clusterName.value()) {
                 log.info("hurneyt getClient LOCAL 1")
                 client
@@ -287,5 +290,20 @@ object MonitorMetadataService :
             log.info("hurneyt getClient LOCAL 2")
             client
         }
+    }
+
+    fun parseClusterAlias(index: String): String {
+        return if (index.contains(":")) index.split(":").getOrElse(0) { "" }
+        else ""
+    }
+
+    fun parseIndexName(index: String): String {
+        return if (index.contains(":")) index.split(":").getOrElse(0) { "" }
+        else index
+    }
+
+    fun formatClusterAndIndexNames(clusterAlias: String, indexName: String): String {
+        return if (clusterAlias.isNotEmpty()) "$clusterAlias:$indexName"
+        else indexName
     }
 }
