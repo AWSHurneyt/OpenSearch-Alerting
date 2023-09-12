@@ -244,7 +244,7 @@ object MonitorMetadataService :
 
     suspend fun createRunContextForIndex(index: String, createdRecently: Boolean = false): MutableMap<String, Any> {
         val request = IndicesStatsRequest().indices(index).clear()
-        val response: IndicesStatsResponse = client.suspendUntil { execute(IndicesStatsAction.INSTANCE, request, it) }
+        val response: IndicesStatsResponse = getClient(index).suspendUntil { execute(IndicesStatsAction.INSTANCE, request, it) }
         if (response.status != RestStatus.OK) {
             val errorMessage = "Failed fetching index stats for index:$index"
             throw AlertingException(errorMessage, RestStatus.INTERNAL_SERVER_ERROR, IllegalStateException(errorMessage))
@@ -261,5 +261,22 @@ object MonitorMetadataService :
                 else shard.seqNoStats?.globalCheckpoint ?: SequenceNumbers.UNASSIGNED_SEQ_NO
         }
         return lastRunContext
+    }
+
+    fun getClient(indexName: String): Client {
+        return if (indexName.contains(":")) {
+            val parsedIndex = indexName.split(":")
+            val clusterAlias = parsedIndex[0]
+            if (clusterAlias == clusterService.clusterName.value()) {
+                log.info("hurneyt getClient LOCAL 1")
+                client
+            } else {
+                log.info("hurneyt getClient REMOTE")
+                client.getRemoteClusterClient(clusterAlias)
+            }
+        } else {
+            log.info("hurneyt getClient LOCAL 2")
+            client
+        }
     }
 }
