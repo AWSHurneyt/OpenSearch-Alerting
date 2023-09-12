@@ -9,6 +9,8 @@ import org.apache.logging.log4j.LogManager
 import org.opensearch.ExceptionsHelper
 import org.opensearch.OpenSearchStatusException
 import org.opensearch.ResourceAlreadyExistsException
+import org.opensearch.action.admin.cluster.state.ClusterStateRequest
+import org.opensearch.action.admin.cluster.state.ClusterStateResponse
 import org.opensearch.action.admin.indices.alias.Alias
 import org.opensearch.action.admin.indices.create.CreateIndexRequest
 import org.opensearch.action.admin.indices.create.CreateIndexResponse
@@ -201,23 +203,27 @@ class DocLevelMonitorQueries(private val client: Client, private val clusterServ
         val docLevelMonitorInput = monitor.inputs[0] as DocLevelMonitorInput
         val queries: List<DocLevelQuery> = docLevelMonitorInput.queries
 
-        val indices = IndexUtils.resolveAllIndices(
-            docLevelMonitorInput.indices,
-            monitorCtx.clusterService!!,
-            monitorCtx.indexNameExpressionResolver!!
-        )
+        val indices = mutableListOf<String>()
+        val separatedClusterIndexes = CrossClusterMonitorUtils.separateClusterIndexes(docLevelMonitorInput.indices, clusterService)
+        separatedClusterIndexes.forEach { (clusterName, indexes) ->
+            val resp: ClusterStateResponse = client.getRemoteClusterClient(clusterName)
+                .suspendUntil { admin().cluster().state(ClusterStateRequest()) }
+            val clusterIndexes = IndexUtils.resolveAllIndices(
+                indexes,
+                resp.state,
+                monitorCtx.indexNameExpressionResolver!!
+            )
+            indices.addAll(clusterIndexes)
+        }
 
         val clusterState = clusterService.state()
 
         // Run through each backing index and apply appropriate mappings to query index
-        indices?.forEach { indexName ->
+        indices.forEach { indexName ->
             if (clusterState.routingTable.hasIndex(indexName)) {
                 val indexMetadata = clusterState.metadata.index(indexName)
                 if (indexMetadata.mapping()?.sourceAsMap?.get("properties") != null) {
-                    val properties = (
-                        (indexMetadata.mapping()?.sourceAsMap?.get("properties"))
-                            as MutableMap<String, Any>
-                        )
+                    val properties = ((indexMetadata.mapping()?.sourceAsMap?.get("properties")) as MutableMap<String, Any>)
                     // Node processor function is used to process leaves of index mappings tree
                     //
                     val leafNodeProcessor =

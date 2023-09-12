@@ -140,11 +140,16 @@ class IndexUtils {
 
         @JvmStatic
         fun resolveAllIndices(indices: List<String>, clusterService: ClusterService, resolver: IndexNameExpressionResolver): List<String> {
+            return resolveAllIndices(indices, clusterService.state(), resolver)
+        }
+
+        @JvmStatic
+        fun resolveAllIndices(indices: List<String>, clusterState: ClusterState, resolver: IndexNameExpressionResolver): List<String> {
             val result = mutableListOf<String>()
 
             indices.forEach { index ->
                 val concreteIndices = resolver.concreteIndexNames(
-                    clusterService.state(),
+                    clusterState,
                     IndicesOptions.lenientExpand(),
                     true,
                     index

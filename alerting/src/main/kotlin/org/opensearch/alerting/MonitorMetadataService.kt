@@ -28,6 +28,10 @@ import org.opensearch.alerting.model.MonitorMetadata
 import org.opensearch.alerting.opensearchapi.suspendUntil
 import org.opensearch.alerting.settings.AlertingSettings
 import org.opensearch.alerting.util.AlertingException
+import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.formatClusterAndIndexNames
+import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.getClient
+import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.parseClusterAlias
+import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.parseIndexName
 import org.opensearch.client.Client
 import org.opensearch.cluster.service.ClusterService
 import org.opensearch.common.settings.Settings
@@ -219,9 +223,8 @@ object MonitorMetadataService :
             if (index == null) return mutableMapOf()
             val getIndexRequest = GetIndexRequest().indices(parseIndexName(index))
             log.info("hurneyt createFullRunContext suspendUntil 1 START")
-            val getIndexResponse: GetIndexResponse = getClient(index).suspendUntil {
-                admin().indices().getIndex(getIndexRequest, it)
-            }
+            val getIndexResponse: GetIndexResponse = getClient(index, client, clusterService)
+                .suspendUntil { admin().indices().getIndex(getIndexRequest, it) }
             log.info("hurneyt createFullRunContext suspendUntil 1 END")
 
             val indices = getIndexResponse.indices()
@@ -257,7 +260,8 @@ object MonitorMetadataService :
 
     suspend fun createRunContextForIndex(index: String, createdRecently: Boolean = false): MutableMap<String, Any> {
         val request = IndicesStatsRequest().indices(parseIndexName(index)).clear()
-        val response: IndicesStatsResponse = getClient(index).suspendUntil { execute(IndicesStatsAction.INSTANCE, request, it) }
+        val response: IndicesStatsResponse = getClient(index, client, clusterService)
+            .suspendUntil { execute(IndicesStatsAction.INSTANCE, request, it) }
         if (response.status != RestStatus.OK) {
             val errorMessage = "Failed fetching index stats for index:$index"
             throw AlertingException(errorMessage, RestStatus.INTERNAL_SERVER_ERROR, IllegalStateException(errorMessage))
@@ -274,36 +278,5 @@ object MonitorMetadataService :
                 else shard.seqNoStats?.globalCheckpoint ?: SequenceNumbers.UNASSIGNED_SEQ_NO
         }
         return lastRunContext
-    }
-
-    fun getClient(indexName: String): Client {
-        return if (indexName.contains(":")) {
-            val clusterAlias = parseClusterAlias(indexName)
-            if (clusterAlias == clusterService.clusterName.value()) {
-                log.info("hurneyt getClient LOCAL 1")
-                client
-            } else {
-                log.info("hurneyt getClient REMOTE")
-                client.getRemoteClusterClient(clusterAlias)
-            }
-        } else {
-            log.info("hurneyt getClient LOCAL 2")
-            client
-        }
-    }
-
-    fun parseClusterAlias(index: String): String {
-        return if (index.contains(":")) index.split(":").getOrElse(0) { "" }
-        else ""
-    }
-
-    fun parseIndexName(index: String): String {
-        return if (index.contains(":")) index.split(":").getOrElse(1) { index }
-        else index
-    }
-
-    fun formatClusterAndIndexNames(clusterAlias: String, indexName: String): String {
-        return if (clusterAlias.isNotEmpty()) "$clusterAlias:$indexName"
-        else indexName
     }
 }
