@@ -119,9 +119,13 @@ class InputService(
                         if (input.clustersAliases.isNotEmpty()) {
                             input.clustersAliases.forEach { alias ->
                                 logger.info("hurneyt ClusterMetricsInput::alias = $alias")
-                                val targetClient =
-                                    if (clusterService.clusterName.value() == alias) client
-                                    else client.getRemoteClusterClient(alias)
+                                val targetClient = if (clusterService.clusterName.value() == alias) {
+                                    logger.info("hurneyt ClusterMetricsInput REGULAR CLIENT 1")
+                                    client
+                                } else {
+                                    logger.info("hurneyt ClusterMetricsInput REMOTE CLIENT")
+                                    client.getRemoteClusterClient(alias)
+                                }
                                 val response = executeTransportAction(input, targetClient)
                                 results += response.toMap()
                             }
