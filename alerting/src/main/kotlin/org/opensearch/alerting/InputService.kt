@@ -110,12 +110,27 @@ class InputService(
                             prevResult?.aggTriggersAfterKey
                         )
                         results += searchResponse.convertToMap()
-                        logger.info("hurneyt results = $results")
+                        logger.info("hurneyt SearchInput::results = $results")
                     }
                     is ClusterMetricsInput -> {
                         logger.debug("ClusterMetricsInput clusterMetricType: ${input.clusterMetricType}")
-                        val response = executeTransportAction(input, client)
-                        results += response.toMap()
+
+                        logger.info("hurneyt ClusterMetricsInput::clustersAliases = ${input.clustersAliases}")
+                        if (input.clustersAliases.isNotEmpty()) {
+                            input.clustersAliases.forEach { alias ->
+                                logger.info("hurneyt ClusterMetricsInput::alias = $alias")
+                                val targetClient =
+                                    if (clusterService.clusterName.value() == alias) client
+                                    else client.getRemoteClusterClient(alias)
+                                val response = executeTransportAction(input, targetClient)
+                                results += response.toMap()
+                            }
+                        } else {
+                            logger.info("hurneyt ClusterMetricsInput NO REMOTE CLUSTERS")
+                            val response = executeTransportAction(input, client)
+                            results += response.toMap()
+                        }
+                        logger.info("hurneyt ClusterMetricsInput::results = $results")
                     }
                     else -> {
                         throw IllegalArgumentException("Unsupported input type: ${input.name()}.")
