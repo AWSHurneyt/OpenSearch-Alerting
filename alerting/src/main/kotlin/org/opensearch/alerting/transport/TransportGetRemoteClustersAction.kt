@@ -20,7 +20,6 @@ import org.opensearch.common.settings.Settings
 import org.opensearch.core.xcontent.NamedXContentRegistry
 import org.opensearch.tasks.Task
 import org.opensearch.transport.TransportService
-import kotlin.streams.toList
 
 private val log = LogManager.getLogger(TransportGetRemoteClustersAction::class.java)
 
@@ -49,9 +48,24 @@ class TransportGetRemoteClustersAction @Inject constructor(
         }
 
         client.threadPool().threadContext.stashContext().use {
-            val clusterInfoList = transportService.remoteClusterService.remoteConnectionInfos
-                .map { ClusterInfo(it.clusterAlias, it.isConnected) }
-            listener.onResponse(GetRemoteClustersResponse(clusterInfoList.toList()))
+            val clusterInfoList = mutableListOf<ClusterInfo>()
+            clusterInfoList.add(
+                ClusterInfo(
+                    clusterAlias = clusterService.clusterName.value(),
+                    connected = true,
+                    hubCluster = true
+                )
+            )
+            transportService.remoteClusterService.remoteConnectionInfos.forEach {
+                clusterInfoList.add(
+                    ClusterInfo(
+                        clusterAlias = it.clusterAlias,
+                        connected = it.isConnected,
+                        hubCluster = false
+                    )
+                )
+            }
+            listener.onResponse(GetRemoteClustersResponse(clusterInfoList))
         }
     }
 }

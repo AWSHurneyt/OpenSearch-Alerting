@@ -43,30 +43,40 @@ class GetRemoteClustersResponse : ActionResponse, ToXContentObject {
 
     data class ClusterInfo(
         val clusterAlias: String,
-        val connected: Boolean
+//        val clusterHealth: String, // TODO hurneyt
+        val connected: Boolean,
+        val hubCluster: Boolean,
     ) : ToXContentObject, Writeable {
 
         @Throws(IOException::class)
         constructor(sin: StreamInput) : this(
             clusterAlias = sin.readString(),
-            connected = sin.readBoolean()
+//            clusterHealth = sin.readString(), // TODO hurneyt
+            connected = sin.readBoolean(),
+            hubCluster = sin.readBoolean()
         )
 
         override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
             return builder.startObject()
                 .field(CLUSTER_ALIAS_FIELD, clusterAlias)
+//                .field(CLUSTER_HEALTH, clusterHealth) // TODO hurneyt
                 .field(CONNECTED_FIELD, connected)
+                .field(HUB_CLUSTER, hubCluster)
                 .endObject()
         }
 
         override fun writeTo(out: StreamOutput) {
             out.writeString(clusterAlias)
+//            out.writeString(clusterHealth) // TODO hurneyt
             out.writeBoolean(connected)
+            out.writeBoolean(hubCluster)
         }
 
         companion object {
             const val CLUSTER_ALIAS_FIELD = "cluster"
+            const val CLUSTER_HEALTH = "cluster_health"
             const val CONNECTED_FIELD = "connected"
+            const val HUB_CLUSTER = "hub_cluster"
 
             @JvmStatic
             @Throws(IOException::class)
