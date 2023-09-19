@@ -67,6 +67,11 @@ class TransportGetRemoteIndexesAction @Inject constructor(
             scope.launch {
                 val clusterInfos = mutableListOf<ClusterInfo>()
                 try {
+                    val clusterName = clusterService.clusterName.value()
+                    if (request.clusterAliases.contains(clusterName)) {
+                        clusterInfos.add(getRemoteIndexes(clusterName))
+                    }
+
                     clusterAliases.forEach {
                         if (it.isConnected) {
                             clusterInfos.add(getRemoteIndexes(it.clusterAlias))
