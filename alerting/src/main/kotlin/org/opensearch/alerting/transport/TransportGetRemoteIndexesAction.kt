@@ -82,9 +82,16 @@ class TransportGetRemoteIndexesAction @Inject constructor(
     }
 
     private suspend fun getRemoteIndexes(clusterAlias: String): ClusterInfo {
+        log.info("hurneyt getRemoteIndexes::clusterAlias = $clusterAlias")
         val targetClient =
-            if (clusterService.clusterName.value() == clusterAlias) client
-            else client.getRemoteClusterClient(clusterAlias)
+            if (clusterService.clusterName.value() == clusterAlias) {
+                log.info("hurneyt getRemoteIndexes LOCAL CLIENT")
+                client
+            }
+            else {
+                log.info("hurneyt getRemoteIndexes REMOTE CLIENT")
+                client.getRemoteClusterClient(clusterAlias)
+            }
 
         val clusterHealthRequest = ClusterHealthRequest().indicesOptions(IndicesOptions.lenientExpandHidden())
 
