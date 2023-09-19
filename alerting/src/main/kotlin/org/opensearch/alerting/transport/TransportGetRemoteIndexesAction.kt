@@ -87,8 +87,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
             if (clusterService.clusterName.value() == clusterAlias) {
                 log.info("hurneyt getRemoteIndexes LOCAL CLIENT")
                 client
-            }
-            else {
+            } else {
                 log.info("hurneyt getRemoteIndexes REMOTE CLIENT")
                 client.getRemoteClusterClient(clusterAlias)
             }
