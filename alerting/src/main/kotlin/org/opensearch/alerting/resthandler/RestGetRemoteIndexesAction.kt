@@ -29,7 +29,7 @@ class RestGetRemoteIndexesAction : BaseRestHandler() {
     override fun routes(): List<RestHandler.Route> {
         return mutableListOf(
             // TODO hurneyt
-//            RestHandler.Route(RestRequest.Method.GET, ROUTE),
+            RestHandler.Route(RestRequest.Method.GET, ROUTE),
             RestHandler.Route(RestRequest.Method.POST, ROUTE)
         )
     }
