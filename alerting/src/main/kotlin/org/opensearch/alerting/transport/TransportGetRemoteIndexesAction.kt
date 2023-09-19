@@ -56,10 +56,13 @@ class TransportGetRemoteIndexesAction @Inject constructor(
     ) {
         var clusterAliases = transportService.remoteClusterService.remoteConnectionInfos.toList()
 
+        log.info("hurneyt filter clusterAliases BEFORE = $clusterAliases")
+
         // If clusters are specified, filter out unspecified clusters
         if (request.clusterAliases.isNotEmpty())
             clusterAliases = clusterAliases.filter { request.clusterAliases.contains(it.clusterAlias) }.toList()
 
+        log.info("hurneyt clusterAliases AFTER = $clusterAliases")
         client.threadPool().threadContext.stashContext().use {
             scope.launch {
                 val clusterInfos = mutableListOf<ClusterInfo>()
@@ -79,12 +82,15 @@ class TransportGetRemoteIndexesAction @Inject constructor(
     }
 
     private suspend fun getRemoteIndexes(clusterAlias: String): ClusterInfo {
-        val remoteClient = client.getRemoteClusterClient(clusterAlias)
+        val targetClient =
+            if (clusterService.clusterName.value() == clusterAlias) client
+            else client.getRemoteClusterClient(clusterAlias)
+
         val clusterHealthRequest = ClusterHealthRequest().indicesOptions(IndicesOptions.lenientExpandHidden())
 
         val startTime = Instant.now()
         val clusterHealthResponse: ClusterHealthResponse =
-            remoteClient.suspendUntil { admin().cluster().health(clusterHealthRequest, it) }
+            targetClient.suspendUntil { admin().cluster().health(clusterHealthRequest, it) }
         val endTime = Instant.now()
 
         // Manually calculating the latency of ClusterHealth call as the API does not return that metric
