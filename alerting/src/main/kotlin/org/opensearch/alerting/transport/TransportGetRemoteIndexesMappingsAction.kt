@@ -18,6 +18,7 @@ import org.opensearch.alerting.action.GetRemoteIndexesMappingsAction
 import org.opensearch.alerting.action.GetRemoteIndexesMappingsRequest
 import org.opensearch.alerting.action.GetRemoteIndexesMappingsResponse
 import org.opensearch.alerting.opensearchapi.suspendUntil
+import org.opensearch.alerting.util.AlertingException
 import org.opensearch.alerting.util.CrossClusterMonitorUtils
 import org.opensearch.client.Client
 import org.opensearch.cluster.metadata.MappingMetadata
@@ -55,24 +56,29 @@ class TransportGetRemoteIndexesMappingsAction @Inject constructor(
         log.info("hurneyt TransportGetRemoteIndexesMappingsAction::remoteClusterIndexes = $remoteClusterIndexes")
 
         client.threadPool().threadContext.stashContext().use {
-            val clusterIndexes = hashMapOf<String, MappingMetadata>()
             scope.launch {
-                remoteClusterIndexes.forEach { (clusterName, indexes) ->
-                    val targetClient = CrossClusterMonitorUtils.getClientForCluster(clusterName, client, clusterService)
-                    val getMappingsRequest = GetMappingsRequest().indices(*indexes.toTypedArray())
-                    val getMappingsResponse: GetMappingsResponse = targetClient.suspendUntil {
-                        admin().indices().getMappings(getMappingsRequest, it)
+                val clusterIndexes = hashMapOf<String, MappingMetadata>()
+                try {
+                    remoteClusterIndexes.forEach { (clusterName, indexes) ->
+                        val targetClient = CrossClusterMonitorUtils.getClientForCluster(clusterName, client, clusterService)
+                        val getMappingsRequest = GetMappingsRequest().indices(*indexes.toTypedArray())
+                        val getMappingsResponse: GetMappingsResponse = targetClient.suspendUntil {
+                            admin().indices().getMappings(getMappingsRequest, it)
+                        }
+                        getMappingsResponse.mappings.forEach {
+                            log.info("hurneyt TransportGetRemoteIndexesMappingsAction::it.key = ${it.key}")
+                            log.info("hurneyt TransportGetRemoteIndexesMappingsAction::it.value = ${it.value.sourceAsMap}")
+                            val formattedIndexName = CrossClusterMonitorUtils.formatClusterAndIndexNames(clusterName, it.key)
+                            log.info("hurneyt TransportGetRemoteIndexesMappingsAction::formattedIndexName = $formattedIndexName")
+                            clusterIndexes[formattedIndexName] = it.value
+                        }
                     }
-                    getMappingsResponse.mappings.forEach {
-                        log.info("hurneyt TransportGetRemoteIndexesMappingsAction::it.key = ${it.key}")
-                        log.info("hurneyt TransportGetRemoteIndexesMappingsAction::it.value = ${it.value.sourceAsMap}")
-                        val formattedIndexName = CrossClusterMonitorUtils.formatClusterAndIndexNames(clusterName, it.key)
-                        log.info("hurneyt TransportGetRemoteIndexesMappingsAction::formattedIndexName = $formattedIndexName")
-                        clusterIndexes[formattedIndexName] = it.value
-                    }
+                } catch (e: Exception) {
+                    log.error("Failed to retrieve index mappings for request $request", e)
+                    listener.onFailure(AlertingException.wrap(e))
                 }
+                listener.onResponse(GetRemoteIndexesMappingsResponse(clusterIndexes))
             }
-            listener.onResponse(GetRemoteIndexesMappingsResponse(clusterIndexes))
         }
     }
 }
