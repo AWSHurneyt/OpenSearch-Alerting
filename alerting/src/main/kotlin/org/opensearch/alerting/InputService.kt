@@ -13,6 +13,7 @@ import org.opensearch.alerting.model.TriggerAfterKey
 import org.opensearch.alerting.opensearchapi.convertToMap
 import org.opensearch.alerting.opensearchapi.suspendUntil
 import org.opensearch.alerting.util.AggregationQueryRewriter
+import org.opensearch.alerting.util.CrossClusterMonitorUtils
 import org.opensearch.alerting.util.addUserBackendRolesFilter
 import org.opensearch.alerting.util.clusterMetricsMonitorHelpers.executeTransportAction
 import org.opensearch.alerting.util.clusterMetricsMonitorHelpers.toMap
@@ -99,7 +100,8 @@ class InputService(
                             .newInstance(searchParams)
                             .execute()
 
-                        val searchRequest = SearchRequest().indices(*input.indices.toTypedArray())
+                        val indexes = CrossClusterMonitorUtils.parseIndexesForSearch(input.indices, clusterService)
+                        val searchRequest = SearchRequest().indices(*indexes.toTypedArray())
                         XContentType.JSON.xContent().createParser(xContentRegistry, LoggingDeprecationHandler.INSTANCE, searchSource).use {
                             searchRequest.source(SearchSourceBuilder.fromXContent(it))
                         }

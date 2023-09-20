@@ -30,6 +30,19 @@ class CrossClusterMonitorUtils {
             return output
         }
 
+        @JvmStatic
+        fun parseIndexesForSearch(indexes: List<String>, clusterService: ClusterService): List<String> {
+            return indexes.map {
+                var index = it
+                val clusterName = parseClusterName(it)
+                if (clusterName.isNotEmpty() && clusterName == clusterService.clusterName.value()) {
+                    index = parseIndexName(it)
+                }
+                index
+            }
+        }
+
+        @JvmStatic
         fun getClientForCluster(clusterName: String, client: Client, clusterService: ClusterService): Client {
             log.info("hurneyt getClientForCluster::clusterName = $clusterName")
             log.info("hurneyt getClientForCluster::clusterService.clusterName = ${clusterService.clusterName.value()}")
@@ -45,7 +58,7 @@ class CrossClusterMonitorUtils {
         @JvmStatic
         fun getClientForIndex(index: String, client: Client, clusterService: ClusterService): Client {
             return if (index.contains(":")) {
-                val clusterAlias = parseClusterAlias(index)
+                val clusterAlias = parseClusterName(index)
                 if (clusterAlias == clusterService.clusterName.value()) {
                     log.info("hurneyt getClient LOCAL 1")
                     client
@@ -60,7 +73,7 @@ class CrossClusterMonitorUtils {
         }
 
         @JvmStatic
-        fun parseClusterAlias(index: String): String {
+        fun parseClusterName(index: String): String {
             return if (index.contains(":")) index.split(":").getOrElse(0) { "" }
             else ""
         }

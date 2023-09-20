@@ -30,7 +30,7 @@ import org.opensearch.alerting.settings.AlertingSettings
 import org.opensearch.alerting.util.AlertingException
 import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.formatClusterAndIndexNames
 import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.getClientForIndex
-import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.parseClusterAlias
+import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.parseClusterName
 import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.parseIndexName
 import org.opensearch.client.Client
 import org.opensearch.cluster.service.ClusterService
@@ -230,7 +230,7 @@ object MonitorMetadataService :
             val indices = getIndexResponse.indices()
 
             log.info("hurneyt createFullRunContext suspendUntil 2 START")
-            val clusterAlias = parseClusterAlias(index)
+            val clusterAlias = parseClusterName(index)
             log.info("hurneyt createFullRunContext suspendUntil clusterAlias = $clusterAlias")
             indices.forEach { indexName ->
                 log.info("hurneyt createFullRunContext suspendUntil indexName = $indexName")
