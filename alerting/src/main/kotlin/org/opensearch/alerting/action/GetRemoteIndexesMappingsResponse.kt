@@ -5,6 +5,7 @@
 
 package org.opensearch.alerting.action
 
+import org.apache.logging.log4j.LogManager
 import org.opensearch.action.ActionResponse
 import org.opensearch.cluster.metadata.MappingMetadata
 import org.opensearch.common.io.stream.StreamInput
@@ -14,6 +15,7 @@ import org.opensearch.core.xcontent.ToXContentObject
 import org.opensearch.core.xcontent.XContentBuilder
 import java.io.IOException
 
+private val log = LogManager.getLogger(GetRemoteIndexesMappingsResponse::class.java)
 class GetRemoteIndexesMappingsResponse : ActionResponse, ToXContentObject {
     var clusterIndexes: Map<String, MappingMetadata> = hashMapOf()
 
@@ -29,11 +31,13 @@ class GetRemoteIndexesMappingsResponse : ActionResponse, ToXContentObject {
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         builder.startObject()
         clusterIndexes.forEach {
+            log.info("hurneyt toXContent::it.key = ${it.key}")
+            log.info("hurneyt toXContent::it.value = ${it.value.sourceAsMap}")
             builder.startObject(it.key)
             if (it.value == null) builder.startObject(MAPPINGS_FIELD).endObject()
             else builder.field(MAPPINGS_FIELD, it.value.sourceAsMap())
+            builder.endObject()
         }
-        builder.endObject()
         return builder.endObject()
     }
 
