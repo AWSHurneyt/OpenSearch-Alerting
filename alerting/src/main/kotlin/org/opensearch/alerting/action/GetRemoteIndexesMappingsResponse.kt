@@ -33,6 +33,7 @@ class GetRemoteIndexesMappingsResponse : ActionResponse, ToXContentObject {
             if (it.value == null) builder.startObject(MAPPINGS_FIELD).endObject()
             else builder.field(MAPPINGS_FIELD, it.value.sourceAsMap())
         }
+        builder.endObject()
         return builder.endObject()
     }
 
