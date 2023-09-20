@@ -31,8 +31,15 @@ class CrossClusterMonitorUtils {
         }
 
         fun getClientForCluster(clusterName: String, client: Client, clusterService: ClusterService): Client {
-            return if (clusterName == clusterService.clusterName.value()) client
-            else client.getRemoteClusterClient(clusterName)
+            log.info("hurneyt getClientForCluster::clusterName = $clusterName")
+            log.info("hurneyt getClientForCluster::clusterService.clusterName = ${clusterService.clusterName.value()}")
+            return if (clusterName == clusterService.clusterName.value()) {
+                log.info("hurneyt getClientForCluster LOCAL")
+                client
+            } else {
+                log.info("hurneyt getClientForCluster REMOTE")
+                client.getRemoteClusterClient(clusterName)
+            }
         }
 
         @JvmStatic
