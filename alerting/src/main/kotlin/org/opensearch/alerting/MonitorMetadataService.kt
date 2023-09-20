@@ -29,7 +29,7 @@ import org.opensearch.alerting.opensearchapi.suspendUntil
 import org.opensearch.alerting.settings.AlertingSettings
 import org.opensearch.alerting.util.AlertingException
 import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.formatClusterAndIndexNames
-import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.getClient
+import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.getClientForIndex
 import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.parseClusterAlias
 import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.parseIndexName
 import org.opensearch.client.Client
@@ -223,7 +223,7 @@ object MonitorMetadataService :
             if (index == null) return mutableMapOf()
             val getIndexRequest = GetIndexRequest().indices(parseIndexName(index))
             log.info("hurneyt createFullRunContext suspendUntil 1 START")
-            val getIndexResponse: GetIndexResponse = getClient(index, client, clusterService)
+            val getIndexResponse: GetIndexResponse = getClientForIndex(index, client, clusterService)
                 .suspendUntil { admin().indices().getIndex(getIndexRequest, it) }
             log.info("hurneyt createFullRunContext suspendUntil 1 END")
 
@@ -260,7 +260,7 @@ object MonitorMetadataService :
 
     suspend fun createRunContextForIndex(index: String, createdRecently: Boolean = false): MutableMap<String, Any> {
         val request = IndicesStatsRequest().indices(parseIndexName(index)).clear()
-        val response: IndicesStatsResponse = getClient(index, client, clusterService)
+        val response: IndicesStatsResponse = getClientForIndex(index, client, clusterService)
             .suspendUntil { execute(IndicesStatsAction.INSTANCE, request, it) }
         if (response.status != RestStatus.OK) {
             val errorMessage = "Failed fetching index stats for index:$index"

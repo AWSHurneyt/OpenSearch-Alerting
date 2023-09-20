@@ -30,8 +30,13 @@ class CrossClusterMonitorUtils {
             return output
         }
 
+        fun getClientForCluster(clusterName: String, client: Client, clusterService: ClusterService): Client {
+            return if (clusterName == clusterService.clusterName.value()) client
+            else client.getRemoteClusterClient(clusterName)
+        }
+
         @JvmStatic
-        fun getClient(index: String, client: Client, clusterService: ClusterService): Client {
+        fun getClientForIndex(index: String, client: Client, clusterService: ClusterService): Client {
             return if (index.contains(":")) {
                 val clusterAlias = parseClusterAlias(index)
                 if (clusterAlias == clusterService.clusterName.value()) {
