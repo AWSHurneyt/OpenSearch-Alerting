@@ -68,7 +68,7 @@ class TransportGetRemoteIndexesMappingsAction @Inject constructor(
                         getMappingsResponse.mappings.forEach {
                             log.info("hurneyt TransportGetRemoteIndexesMappingsAction::it.key = ${it.key}")
                             log.info("hurneyt TransportGetRemoteIndexesMappingsAction::it.value = ${it.value.sourceAsMap}")
-                            val formattedIndexName = CrossClusterMonitorUtils.formatClusterAndIndexNames(clusterName, it.key)
+                            val formattedIndexName = CrossClusterMonitorUtils.formatClusterAndIndexName(clusterName, it.key)
                             log.info("hurneyt TransportGetRemoteIndexesMappingsAction::formattedIndexName = $formattedIndexName")
                             clusterIndexes[formattedIndexName] = it.value
                         }

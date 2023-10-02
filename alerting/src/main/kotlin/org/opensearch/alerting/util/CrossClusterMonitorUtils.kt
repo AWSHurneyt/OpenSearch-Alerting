@@ -18,20 +18,16 @@ class CrossClusterMonitorUtils {
         fun separateClusterIndexes(indexes: List<String>, clusterService: ClusterService): HashMap<String, MutableList<String>> {
             val output = hashMapOf<String, MutableList<String>>()
             indexes.forEach { index ->
-                if (index.contains(":")) {
-                    val parsedNames = index.split(":")
-                    val clusterName = parsedNames[0]
-                    val indexName = parsedNames[1]
-                    output.getOrPut(clusterName) { mutableListOf() }.add(indexName)
-                } else {
-                    output.getOrPut(clusterService.clusterName.value()) { mutableListOf() }.add(index)
-                }
+                var clusterName = parseClusterName(index)
+                val indexName = parseIndexName(index)
+                if (clusterName.isEmpty()) clusterName = clusterService.clusterName.value()
+                output.getOrPut(clusterName) { mutableListOf() }.add(indexName)
             }
             return output
         }
 
         @JvmStatic
-        fun parseIndexesForSearch(indexes: List<String>, clusterService: ClusterService): List<String> {
+        fun parseIndexesForRemoteSearch(indexes: List<String>, clusterService: ClusterService): List<String> {
             return indexes.map {
                 var index = it
                 val clusterName = parseClusterName(it)
@@ -57,17 +53,12 @@ class CrossClusterMonitorUtils {
 
         @JvmStatic
         fun getClientForIndex(index: String, client: Client, clusterService: ClusterService): Client {
-            return if (index.contains(":")) {
-                val clusterAlias = parseClusterName(index)
-                if (clusterAlias == clusterService.clusterName.value()) {
-                    log.info("hurneyt getClient LOCAL 1")
-                    client
-                } else {
-                    log.info("hurneyt getClient REMOTE")
-                    client.getRemoteClusterClient(clusterAlias)
-                }
+            val clusterName = parseClusterName(index)
+            return if (clusterName.isNotEmpty() && clusterName != clusterService.clusterName.value()) {
+                log.info("hurneyt getClient REMOTE")
+                client.getRemoteClusterClient(clusterName)
             } else {
-                log.info("hurneyt getClient LOCAL 2")
+                log.info("hurneyt getClient LOCAL")
                 client
             }
         }
@@ -85,7 +76,7 @@ class CrossClusterMonitorUtils {
         }
 
         @JvmStatic
-        fun formatClusterAndIndexNames(clusterName: String, indexName: String): String {
+        fun formatClusterAndIndexName(clusterName: String, indexName: String): String {
             return if (clusterName.isNotEmpty()) "$clusterName:$indexName"
             else indexName
         }

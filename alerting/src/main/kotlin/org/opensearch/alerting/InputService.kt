@@ -5,6 +5,9 @@
 
 package org.opensearch.alerting
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.apache.logging.log4j.LogManager
 import org.opensearch.action.search.SearchRequest
 import org.opensearch.action.search.SearchResponse
@@ -42,6 +45,8 @@ import org.opensearch.script.ScriptType
 import org.opensearch.script.TemplateScript
 import org.opensearch.search.builder.SearchSourceBuilder
 import java.time.Instant
+
+private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 
 /** Service that handles the collection of input results for Monitor executions */
 class InputService(
@@ -100,7 +105,7 @@ class InputService(
                             .newInstance(searchParams)
                             .execute()
 
-                        val indexes = CrossClusterMonitorUtils.parseIndexesForSearch(input.indices, clusterService)
+                        val indexes = CrossClusterMonitorUtils.parseIndexesForRemoteSearch(input.indices, clusterService)
                         val searchRequest = SearchRequest().indices(*indexes.toTypedArray())
                         XContentType.JSON.xContent().createParser(xContentRegistry, LoggingDeprecationHandler.INSTANCE, searchSource).use {
                             searchRequest.source(SearchSourceBuilder.fromXContent(it))
@@ -119,17 +124,15 @@ class InputService(
 
                         logger.info("hurneyt ClusterMetricsInput::clustersAliases = ${input.clustersAliases}")
                         if (input.clustersAliases.isNotEmpty()) {
-                            input.clustersAliases.forEach { alias ->
-                                logger.info("hurneyt ClusterMetricsInput::alias = $alias")
-                                val targetClient = if (clusterService.clusterName.value() == alias) {
-                                    logger.info("hurneyt ClusterMetricsInput REGULAR CLIENT 1")
-                                    client
-                                } else {
-                                    logger.info("hurneyt ClusterMetricsInput REMOTE CLIENT")
-                                    client.getRemoteClusterClient(alias)
+                            client.threadPool().threadContext.stashContext().use {
+                                scope.launch {
+                                    input.clustersAliases.forEach { alias ->
+                                        logger.info("hurneyt ClusterMetricsInput::alias = $alias")
+                                        val targetClient = CrossClusterMonitorUtils.getClientForCluster(alias, client, clusterService)
+                                        val response = executeTransportAction(input, targetClient)
+                                        results += response.toMap()
+                                    }
                                 }
-                                val response = executeTransportAction(input, targetClient)
-                                results += response.toMap()
                             }
                         } else {
                             logger.info("hurneyt ClusterMetricsInput NO REMOTE CLUSTERS")
