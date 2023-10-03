@@ -11,6 +11,7 @@ import org.opensearch.alerting.action.GetRemoteIndexesAction
 import org.opensearch.alerting.action.GetRemoteIndexesRequest
 import org.opensearch.client.node.NodeClient
 import org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken
+import org.opensearch.core.common.Strings
 import org.opensearch.core.xcontent.XContentParser
 import org.opensearch.rest.BaseRestHandler
 import org.opensearch.rest.RestHandler
@@ -20,7 +21,7 @@ import org.opensearch.rest.action.RestToXContentListener
 private val log = LogManager.getLogger(RestGetRemoteIndexesAction::class.java)
 
 class RestGetRemoteIndexesAction : BaseRestHandler() {
-    val ROUTE = "${AlertingPlugin.REMOTE_BASE_URI}/indexes"
+    val ROUTE = "${AlertingPlugin.REMOTE_BASE_URI}/indexes/{name}"
 
     override fun getName(): String {
         return "get_remote_indexes_action"
@@ -28,19 +29,33 @@ class RestGetRemoteIndexesAction : BaseRestHandler() {
 
     override fun routes(): List<RestHandler.Route> {
         return mutableListOf(
-            RestHandler.Route(RestRequest.Method.GET, ROUTE),
-            RestHandler.Route(RestRequest.Method.POST, ROUTE)
+            RestHandler.Route(RestRequest.Method.GET, ROUTE)
+//            ,
+//            RestHandler.Route(RestRequest.Method.POST, ROUTE)
         )
     }
 
     override fun prepareRequest(request: RestRequest, client: NodeClient): RestChannelConsumer {
         log.debug("${request.method()} $ROUTE")
-        val clusterAliases = getClusterAliases(request.contentParser())
+        log.info("hurneyt RestGetRemoteIndexesAction::request = {}", request)
+
+        val includeMappings = request.paramAsBoolean(GetRemoteIndexesRequest.INCLUDE_MAPPINGS_FIELD, false)
+        log.info("hurneyt RestGetRemoteIndexesAction::includeMappings = {}", includeMappings)
+
+//        val clusterAliases = getClusterAliases(request.contentParser())
+        val clusterField = request.paramAsStringArray(GetRemoteIndexesRequest.CLUSTERS_FIELD, emptyArray<String>())
+        log.info("hurneyt RestGetRemoteIndexesAction::clusterField = ", clusterField)
+
+        val indexes = Strings.splitStringByCommaToArray(request.param("name"))
+        log.info("hurneyt RestGetRemoteIndexesAction::indexes = ", indexes)
+
+        val indexes2 = request.paramAsStringArray("name", emptyArray<String>())
+        log.info("hurneyt RestGetRemoteIndexesAction::indexes2 = ", indexes2)
         return RestChannelConsumer {
                 channel ->
             client.execute(
                 GetRemoteIndexesAction.INSTANCE,
-                GetRemoteIndexesRequest(clusterAliases),
+                GetRemoteIndexesRequest(indexes.toList(), includeMappings),
                 RestToXContentListener(channel)
             )
         }

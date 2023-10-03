@@ -54,11 +54,12 @@ class CrossClusterMonitorUtils {
         @JvmStatic
         fun getClientForIndex(index: String, client: Client, clusterService: ClusterService): Client {
             val clusterName = parseClusterName(index)
+            log.info("hurneyt getClientForIndex::clusterName = $clusterName")
             return if (clusterName.isNotEmpty() && clusterName != clusterService.clusterName.value()) {
-                log.info("hurneyt getClient REMOTE")
+                log.info("hurneyt getClientForIndex REMOTE")
                 client.getRemoteClusterClient(clusterName)
             } else {
-                log.info("hurneyt getClient LOCAL")
+                log.info("hurneyt getClientForIndex LOCAL")
                 client
             }
         }
