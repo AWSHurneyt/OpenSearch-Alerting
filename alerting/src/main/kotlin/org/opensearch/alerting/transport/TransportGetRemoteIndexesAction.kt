@@ -120,7 +120,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                             clusterName = clusterName,
                             clusterHealth = clusterHealthResponse!!.status,
                             hubCluster = clusterName == clusterService.clusterName.value(),
-                            indexes = listOf(),
+                            indexes = indexInfos,
                             latency = latency
                         )
                     )
