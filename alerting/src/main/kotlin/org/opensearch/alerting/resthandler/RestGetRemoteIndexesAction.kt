@@ -38,6 +38,7 @@ class RestGetRemoteIndexesAction : BaseRestHandler() {
     override fun prepareRequest(request: RestRequest, client: NodeClient): RestChannelConsumer {
         log.debug("${request.method()} $ROUTE")
         log.info("hurneyt RestGetRemoteIndexesAction::request = {}", request)
+        log.info("hurneyt RestGetRemoteIndexesAction::request.uri = {}", request.uri())
 
         val includeMappings = request.paramAsBoolean(GetRemoteIndexesRequest.INCLUDE_MAPPINGS_FIELD, false)
         log.info("hurneyt RestGetRemoteIndexesAction::includeMappings = {}", includeMappings)
