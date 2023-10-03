@@ -77,6 +77,8 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                 log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesMap = {}", clusterIndexesMap)
 
                 clusterIndexesMap.forEach { (clusterName, indexes) ->
+                    log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesMap clusterName = {}", clusterName)
+                    log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesMap indexes = {}", indexes)
                     val targetClient = CrossClusterMonitorUtils.getClientForCluster(clusterName, client, clusterService)
 
                     val startTime = Instant.now()
@@ -88,6 +90,9 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                         listener.onFailure(AlertingException.wrap(e))
                     }
                     val endTime = Instant.now()
+
+                    log.info("hurneyt TransportGetRemoteIndexesAction::clusterHealthResponse keys = {}", clusterHealthResponse?.indices?.keys)
+
                     val latency = Duration.between(startTime, endTime).toMillis()
 
                     var mappingsResponse: GetMappingsResponse? = null
