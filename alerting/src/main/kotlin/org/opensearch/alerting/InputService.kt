@@ -124,9 +124,9 @@ class InputService(
                         logger.info("hurneyt ClusterMetricsInput::clustersAliases = ${input.clusters}")
                         if (input.clusters.isNotEmpty()) {
                             logger.info("hurneyt ClusterMetricsInput HAS REMOTE CLUSTERS")
+                            val responseMap = mutableMapOf<String, Map<String, Any>>()
                             client.threadPool().threadContext.stashContext().use {
                                 scope.launch {
-                                    val responseMap = mutableMapOf<String, Map<String, Any>>()
                                     input.clusters.forEach { cluster ->
                                         logger.info("hurneyt ClusterMetricsInput::cluster = $cluster")
                                         val targetClient = CrossClusterMonitorUtils.getClientForCluster(cluster, client, clusterService)
@@ -137,9 +137,9 @@ class InputService(
                                         // Not adding this same logic for local-only monitors to avoid breaking existing monitors.
                                         responseMap[cluster] = response.toMap()
                                     }
-                                    results += responseMap
                                 }
                             }
+                            results += responseMap
                         } else {
                             logger.info("hurneyt ClusterMetricsInput NO REMOTE CLUSTERS")
                             val response = executeTransportAction(input, client)
