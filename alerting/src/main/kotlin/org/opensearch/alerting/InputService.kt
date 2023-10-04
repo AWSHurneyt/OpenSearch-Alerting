@@ -121,20 +121,23 @@ class InputService(
                     }
                     is ClusterMetricsInput -> {
                         logger.debug("ClusterMetricsInput clusterMetricType: ${input.clusterMetricType}")
-
                         logger.info("hurneyt ClusterMetricsInput::clustersAliases = ${input.clusters}")
                         if (input.clusters.isNotEmpty()) {
+                            logger.info("hurneyt ClusterMetricsInput HAS REMOTE CLUSTERS")
                             client.threadPool().threadContext.stashContext().use {
                                 scope.launch {
+                                    val responseMap = mutableMapOf<String, Map<String, Any>>()
                                     input.clusters.forEach { cluster ->
                                         logger.info("hurneyt ClusterMetricsInput::cluster = $cluster")
                                         val targetClient = CrossClusterMonitorUtils.getClientForCluster(cluster, client, clusterService)
                                         val response = executeTransportAction(input, targetClient)
 
                                         // Not all supported API reference the cluster name in their response.
-                                        // Mapping each response to the cluster name.
-                                        results += mapOf(cluster to response.toMap())
+                                        // Mapping each response to the cluster name before adding to results.
+                                        // Not adding this same logic for local-only monitors to avoid breaking existing monitors.
+                                        responseMap[cluster] = response.toMap()
                                     }
+                                    results += responseMap
                                 }
                             }
                         } else {
