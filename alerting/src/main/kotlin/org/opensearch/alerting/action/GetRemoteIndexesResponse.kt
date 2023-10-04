@@ -17,6 +17,7 @@ import org.opensearch.core.xcontent.ToXContentObject
 import org.opensearch.core.xcontent.XContentBuilder
 import java.io.IOException
 
+// TODO hurneyt
 private val log = LogManager.getLogger(GetRemoteIndexesResponse::class.java)
 
 class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {
@@ -111,7 +112,7 @@ class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {
                 builder.startObject(indexName)
                 builder.field(INDEX_NAME_FIELD, indexName)
                 builder.field(INDEX_HEALTH_FIELD, indexHealth)
-                if (mappings == null) builder.startObject(GetRemoteIndexesMappingsResponse.MAPPINGS_FIELD).endObject()
+                if (mappings == null) builder.startObject(MAPPINGS_FIELD).endObject()
                 else builder.field(MAPPINGS_FIELD, mappings.sourceAsMap())
                 return builder.endObject()
             }
