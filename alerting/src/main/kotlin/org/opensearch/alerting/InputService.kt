@@ -122,15 +122,18 @@ class InputService(
                     is ClusterMetricsInput -> {
                         logger.debug("ClusterMetricsInput clusterMetricType: ${input.clusterMetricType}")
 
-                        logger.info("hurneyt ClusterMetricsInput::clustersAliases = ${input.clustersAliases}")
-                        if (input.clustersAliases.isNotEmpty()) {
+                        logger.info("hurneyt ClusterMetricsInput::clustersAliases = ${input.clusters}")
+                        if (input.clusters.isNotEmpty()) {
                             client.threadPool().threadContext.stashContext().use {
                                 scope.launch {
-                                    input.clustersAliases.forEach { alias ->
-                                        logger.info("hurneyt ClusterMetricsInput::alias = $alias")
-                                        val targetClient = CrossClusterMonitorUtils.getClientForCluster(alias, client, clusterService)
+                                    input.clusters.forEach { cluster ->
+                                        logger.info("hurneyt ClusterMetricsInput::cluster = $cluster")
+                                        val targetClient = CrossClusterMonitorUtils.getClientForCluster(cluster, client, clusterService)
                                         val response = executeTransportAction(input, targetClient)
-                                        results += response.toMap()
+
+                                        // Not all supported API reference the cluster name in their response.
+                                        // Mapping each response to the cluster name.
+                                        results += mapOf(cluster to response.toMap())
                                     }
                                 }
                             }
