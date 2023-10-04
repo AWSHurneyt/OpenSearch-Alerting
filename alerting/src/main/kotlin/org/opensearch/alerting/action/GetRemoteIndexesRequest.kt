@@ -15,11 +15,11 @@ import java.io.IOException
 private val log = LogManager.getLogger(GetRemoteIndexesRequest::class.java)
 
 class GetRemoteIndexesRequest : ActionRequest {
-    var clusterAliases: List<String> = listOf()
+    var indexes: List<String> = listOf()
     var includeMappings: Boolean
 
-    constructor(clusterAliases: List<String>, includeMappings: Boolean) : super() {
-        this.clusterAliases = clusterAliases
+    constructor(indexes: List<String>, includeMappings: Boolean) : super() {
+        this.indexes = indexes
         this.includeMappings = includeMappings
     }
 
@@ -30,18 +30,19 @@ class GetRemoteIndexesRequest : ActionRequest {
     )
 
     override fun validate(): ActionRequestValidationException? {
+        // TODO hurneyt
         return null
     }
 
     @Throws(IOException::class)
     override fun writeTo(out: StreamOutput) {
-        out.writeStringArray(clusterAliases.toTypedArray())
+        out.writeStringArray(indexes.toTypedArray())
         out.writeBoolean(includeMappings)
     }
 
     companion object {
         // TODO hurneyt: is this companion needed?
-        const val CLUSTERS_FIELD = "clusters"
+        const val INDEXES_FIELD = "indexes"
         const val INCLUDE_MAPPINGS_FIELD = "include_mappings"
     }
 }

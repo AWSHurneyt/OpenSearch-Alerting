@@ -20,38 +20,36 @@ import java.io.IOException
 private val log = LogManager.getLogger(GetRemoteIndexesResponse::class.java)
 
 class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {
-    var clusters: List<ClusterInfo> = emptyList()
+    var clusterIndexes: List<ClusterIndexes> = emptyList()
 
-    constructor(clusters: List<ClusterInfo>) : super() {
-        this.clusters = clusters
+    constructor(clusterIndexes: List<ClusterIndexes>) : super() {
+        this.clusterIndexes = clusterIndexes
     }
 
     @Throws(IOException::class)
     constructor(sin: StreamInput) : this(
-        clusters = sin.readList((ClusterInfo.Companion)::readFrom)
+        clusterIndexes = sin.readList((ClusterIndexes.Companion)::readFrom)
     )
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         builder.startObject()
-            .startArray(CLUSTERS_FIELD)
-        clusters.forEach { it.toXContent(builder, params) }
-        return builder.endArray().endObject()
+        clusterIndexes.forEach {
+            builder.startObject(it.clusterName)
+            it.toXContent(builder, params)
+            builder.endObject()
+        }
+        return builder.endObject()
     }
 
     override fun writeTo(out: StreamOutput) {
-        clusters.forEach { it.writeTo(out) }
+        clusterIndexes.forEach { it.writeTo(out) }
     }
 
-    companion object {
-        const val CLUSTERS_FIELD = "clusters"
-    }
-
-    data class ClusterInfo(
+    data class ClusterIndexes(
         val clusterName: String,
         val clusterHealth: ClusterHealthStatus,
-//        val connected: Boolean,
         val hubCluster: Boolean,
-        val indexes: List<IndexInfo> = listOf(),
+        val indexes: List<ClusterIndex> = listOf(),
         val latency: Long
     ) : ToXContentObject, Writeable {
 
@@ -59,9 +57,8 @@ class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {
         constructor(sin: StreamInput) : this(
             clusterName = sin.readString(),
             clusterHealth = sin.readEnum(ClusterHealthStatus::class.java),
-//            connected = sin.readBoolean(),
             hubCluster = sin.readBoolean(),
-            indexes = sin.readList((IndexInfo.Companion)::readFrom),
+            indexes = sin.readList((ClusterIndex.Companion)::readFrom),
             latency = sin.readLong()
         )
 
@@ -69,12 +66,15 @@ class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {
             builder.startObject()
                 .field(CLUSTER_NAME_FIELD, clusterName)
                 .field(CLUSTER_HEALTH_FIELD, clusterHealth)
-//                .field(CONNECTED_FIELD, connected)
                 .field(HUB_CLUSTER_FIELD, hubCluster)
                 .field(INDEX_LATENCY_FIELD, latency)
-                .startArray(INDEXES_FIELD)
-            indexes.forEach { it.toXContent(builder, params) }
-            return builder.endArray().endObject()
+                .startObject(INDEXES_FIELD)
+            indexes.forEach {
+                builder.startObject(it.indexName)
+                it.toXContent(builder, params)
+                builder.endObject()
+            }
+            return builder.endObject().endObject()
         }
 
         override fun writeTo(out: StreamOutput) {
@@ -87,19 +87,18 @@ class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {
         companion object {
             const val CLUSTER_NAME_FIELD = "cluster"
             const val CLUSTER_HEALTH_FIELD = "health"
-            const val CONNECTED_FIELD = "connected"
             const val HUB_CLUSTER_FIELD = "hub_cluster"
             const val INDEXES_FIELD = "indexes"
             const val INDEX_LATENCY_FIELD = "latency"
 
             @JvmStatic
             @Throws(IOException::class)
-            fun readFrom(sin: StreamInput): ClusterInfo {
-                return ClusterInfo(sin)
+            fun readFrom(sin: StreamInput): ClusterIndexes {
+                return ClusterIndexes(sin)
             }
         }
 
-        data class IndexInfo(
+        data class ClusterIndex(
             val indexName: String,
             val indexHealth: ClusterHealthStatus,
             val mappings: MappingMetadata?
@@ -134,8 +133,8 @@ class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {
 
                 @JvmStatic
                 @Throws(IOException::class)
-                fun readFrom(sin: StreamInput): IndexInfo {
-                    return IndexInfo(sin)
+                fun readFrom(sin: StreamInput): ClusterIndex {
+                    return ClusterIndex(sin)
                 }
             }
         }

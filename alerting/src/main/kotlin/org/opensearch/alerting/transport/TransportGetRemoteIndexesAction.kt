@@ -21,8 +21,8 @@ import org.opensearch.action.support.IndicesOptions
 import org.opensearch.alerting.action.GetRemoteIndexesAction
 import org.opensearch.alerting.action.GetRemoteIndexesRequest
 import org.opensearch.alerting.action.GetRemoteIndexesResponse
-import org.opensearch.alerting.action.GetRemoteIndexesResponse.ClusterInfo
-import org.opensearch.alerting.action.GetRemoteIndexesResponse.ClusterInfo.IndexInfo
+import org.opensearch.alerting.action.GetRemoteIndexesResponse.ClusterIndexes
+import org.opensearch.alerting.action.GetRemoteIndexesResponse.ClusterIndexes.ClusterIndex
 import org.opensearch.alerting.opensearchapi.suspendUntil
 import org.opensearch.alerting.util.AlertingException
 import org.opensearch.alerting.util.CrossClusterMonitorUtils
@@ -60,11 +60,11 @@ class TransportGetRemoteIndexesAction @Inject constructor(
         log.info("hurneyt TransportGetRemoteIndexesAction START")
         client.threadPool().threadContext.stashContext().use {
             scope.launch {
-                val clusterInfos = mutableListOf<ClusterInfo>()
+                val clusterIndexesList = mutableListOf<ClusterIndexes>()
 
                 var resolveIndexResponse: ResolveIndexAction.Response? = null
                 try {
-                    resolveIndexResponse = getRemoteClusters(request.clusterAliases)
+                    resolveIndexResponse = getRemoteClusters(request.indexes)
                 } catch (e: Exception) {
                     log.error("Failed to retrieve indexes for request $request", e)
                     listener.onFailure(AlertingException.wrap(e))
@@ -105,28 +105,29 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                         }
                     }
 
-                    val indexInfos = mutableListOf<IndexInfo>()
+                    val clusterIndexList = mutableListOf<ClusterIndex>()
                     indexes.forEach {
-                        indexInfos.add(
-                            IndexInfo(
+                        clusterIndexList.add(
+                            ClusterIndex(
                                 indexName = it,
                                 indexHealth = clusterHealthResponse!!.indices[it]!!.status,
                                 mappings = mappingsResponse?.mappings?.get(it)
                             )
                         )
                     }
-                    clusterInfos.add(
-                        ClusterInfo(
+
+                    clusterIndexesList.add(
+                        ClusterIndexes(
                             clusterName = clusterName,
                             clusterHealth = clusterHealthResponse!!.status,
                             hubCluster = clusterName == clusterService.clusterName.value(),
-                            indexes = indexInfos,
+                            indexes = clusterIndexList,
                             latency = latency
                         )
                     )
                 }
                 log.info("hurneyt TransportGetRemoteIndexesAction END")
-                listener.onResponse(GetRemoteIndexesResponse(clusters = clusterInfos))
+                listener.onResponse(GetRemoteIndexesResponse(clusterIndexes = clusterIndexesList))
             }
         }
     }
