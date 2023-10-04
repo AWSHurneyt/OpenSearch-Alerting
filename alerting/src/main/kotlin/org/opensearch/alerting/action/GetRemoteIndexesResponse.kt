@@ -34,9 +34,7 @@ class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         builder.startObject()
         clusterIndexes.forEach {
-            builder.startObject(it.clusterName)
-            it.toXContent(builder, params)
-            builder.endObject()
+            builder.field(it.clusterName, it.toXContent(builder, params))
         }
         return builder.endObject()
     }
