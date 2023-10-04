@@ -64,11 +64,11 @@ class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {
 
         override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
             builder.startObject()
-                .field(CLUSTER_NAME_FIELD, clusterName)
-                .field(CLUSTER_HEALTH_FIELD, clusterHealth)
-                .field(HUB_CLUSTER_FIELD, hubCluster)
-                .field(INDEX_LATENCY_FIELD, latency)
-                .startObject(INDEXES_FIELD)
+            builder.field(CLUSTER_NAME_FIELD, clusterName)
+            builder.field(CLUSTER_HEALTH_FIELD, clusterHealth)
+            builder.field(HUB_CLUSTER_FIELD, hubCluster)
+            builder.field(INDEX_LATENCY_FIELD, latency)
+            builder.startObject(INDEXES_FIELD)
             indexes.forEach {
                 builder.field(it.indexName, it.toXContent(builder, params))
             }
@@ -111,8 +111,8 @@ class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {
 
             override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
                 builder.startObject()
-                    .field(INDEX_NAME_FIELD, indexName)
-                    .field(INDEX_HEALTH_FIELD, indexHealth)
+                builder.field(INDEX_NAME_FIELD, indexName)
+                builder.field(INDEX_HEALTH_FIELD, indexHealth)
                 if (mappings == null) builder.startObject(GetRemoteIndexesMappingsResponse.MAPPINGS_FIELD).endObject()
                 else builder.field(MAPPINGS_FIELD, mappings.sourceAsMap())
                 return builder.endObject()
