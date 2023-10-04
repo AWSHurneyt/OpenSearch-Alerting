@@ -70,9 +70,7 @@ class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {
                 .field(INDEX_LATENCY_FIELD, latency)
                 .startObject(INDEXES_FIELD)
             indexes.forEach {
-                builder.startObject(it.indexName)
-                it.toXContent(builder, params)
-                builder.endObject()
+                builder.field(it.indexName, it.toXContent(builder, params))
             }
             return builder.endObject().endObject()
         }
