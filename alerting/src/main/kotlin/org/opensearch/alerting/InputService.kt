@@ -126,11 +126,12 @@ class InputService(
                             logger.info("hurneyt ClusterMetricsInput HAS REMOTE CLUSTERS")
                             val responseMap = mutableMapOf<String, Map<String, Any>>()
                             client.threadPool().threadContext.stashContext().use {
-                                scope.launch {
-                                    input.clusters.forEach { cluster ->
-                                        logger.info("hurneyt ClusterMetricsInput::cluster = $cluster")
+                                input.clusters.forEach { cluster ->
+                                    logger.info("hurneyt ClusterMetricsInput::cluster = $cluster")
+                                    scope.launch {
                                         val targetClient = CrossClusterMonitorUtils.getClientForCluster(cluster, client, clusterService)
                                         val response = executeTransportAction(input, targetClient)
+                                        logger.info("hurneyt ClusterMetricsInput::response = ${response.toMap()}")
 
                                         // Not all supported API reference the cluster name in their response.
                                         // Mapping each response to the cluster name before adding to results.
