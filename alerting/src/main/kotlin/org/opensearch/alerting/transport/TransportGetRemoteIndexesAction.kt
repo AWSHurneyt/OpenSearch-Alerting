@@ -139,6 +139,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
             ResolveIndexAction.Request.DEFAULT_INDICES_OPTIONS
         )
         return client.suspendUntil {
+            // TODO hurneyt: return aliases as well
             admin().indices().resolveIndex(resolveRequest, it)
         }
     }
