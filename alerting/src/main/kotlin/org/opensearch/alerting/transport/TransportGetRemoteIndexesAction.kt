@@ -65,6 +65,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
             scope.launch {
                 try {
                     resolveIndexResponse = getRemoteClusters(request.indexes)
+                    log.info("hurneyt TransportGetRemoteIndexesAction::resolveIndexResponse = {}", resolveIndexResponse)
                 } catch (e: Exception) {
                     log.error("Failed to retrieve indexes for request $request", e)
                     listener.onFailure(AlertingException.wrap(e))
