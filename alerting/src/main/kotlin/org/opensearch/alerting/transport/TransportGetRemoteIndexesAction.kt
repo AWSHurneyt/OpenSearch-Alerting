@@ -59,10 +59,10 @@ class TransportGetRemoteIndexesAction @Inject constructor(
     ) {
         log.info("hurneyt TransportGetRemoteIndexesAction START")
         client.threadPool().threadContext.stashContext().use {
-            val clusterIndexesList = mutableListOf<ClusterIndexes>()
-
-            var resolveIndexResponse: ResolveIndexAction.Response? = null
             scope.launch {
+                val clusterIndexesList = mutableListOf<ClusterIndexes>()
+
+                var resolveIndexResponse: ResolveIndexAction.Response? = null
                 try {
                     resolveIndexResponse = getRemoteClusters(request.indexes)
                     log.info("hurneyt TransportGetRemoteIndexesAction::resolveIndexResponse = {}", resolveIndexResponse)
@@ -70,15 +70,14 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                     log.error("Failed to retrieve indexes for request $request", e)
                     listener.onFailure(AlertingException.wrap(e))
                 }
-            }
 
-            val resolvedIndexes = resolveIndexResponse?.indices?.map { it.name } ?: emptyList()
-            log.info("hurneyt TransportGetRemoteIndexesAction::resolvedIndexes = {}", resolvedIndexes)
+                val resolvedIndexes = resolveIndexResponse?.indices?.map { it.name } ?: emptyList()
+                log.info("hurneyt TransportGetRemoteIndexesAction::resolvedIndexes = {}", resolvedIndexes)
 
-            val clusterIndexesMap = CrossClusterMonitorUtils.separateClusterIndexes(resolvedIndexes, clusterService)
-            log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesMap = {}", clusterIndexesMap)
-            clusterIndexesMap.forEach { (clusterName, indexes) ->
-                scope.launch {
+                val clusterIndexesMap = CrossClusterMonitorUtils.separateClusterIndexes(resolvedIndexes, clusterService)
+                log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesMap = {}", clusterIndexesMap)
+
+                clusterIndexesMap.forEach { (clusterName, indexes) ->
                     log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesMap clusterName = {}", clusterName)
                     log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesMap indexes = {}", indexes)
                     val targetClient = CrossClusterMonitorUtils.getClientForCluster(clusterName, client, clusterService)
@@ -128,9 +127,9 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                         )
                     )
                 }
+                log.info("hurneyt TransportGetRemoteIndexesAction END")
+                listener.onResponse(GetRemoteIndexesResponse(clusterIndexes = clusterIndexesList))
             }
-            log.info("hurneyt TransportGetRemoteIndexesAction END")
-            listener.onResponse(GetRemoteIndexesResponse(clusterIndexes = clusterIndexesList))
         }
     }
 
@@ -140,7 +139,6 @@ class TransportGetRemoteIndexesAction @Inject constructor(
             ResolveIndexAction.Request.DEFAULT_INDICES_OPTIONS
         )
         return client.suspendUntil {
-            // TODO hurneyt: return aliases as well
             admin().indices().resolveIndex(resolveRequest, it)
         }
     }
