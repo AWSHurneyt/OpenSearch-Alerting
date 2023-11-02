@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager
 import org.opensearch.alerting.model.MonitorRunResult
 import org.opensearch.alerting.model.QueryLevelTriggerRunResult
 import org.opensearch.alerting.opensearchapi.InjectorContextElement
+import org.opensearch.alerting.opensearchapi.convertToMap
 import org.opensearch.alerting.opensearchapi.withClosableContext
 import org.opensearch.alerting.script.QueryLevelTriggerExecutionContext
 import org.opensearch.alerting.util.isADMonitor
@@ -66,6 +67,9 @@ object QueryLevelMonitorRunner : MonitorRunner() {
             val currentAlert = currentAlerts[trigger]
             val triggerCtx = QueryLevelTriggerExecutionContext(monitor, trigger as QueryLevelTrigger, monitorResult, currentAlert)
             val triggerResult = monitorCtx.triggerService!!.runQueryLevelTrigger(monitor, trigger, triggerCtx)
+
+            logger.info("hurneyt triggerResult = ${triggerResult.convertToMap()}")
+
             triggerResults[trigger.id] = triggerResult
 
             if (monitorCtx.triggerService!!.isQueryLevelTriggerActionable(triggerCtx, triggerResult, workflowRunContext)) {
