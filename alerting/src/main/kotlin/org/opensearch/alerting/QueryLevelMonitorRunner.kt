@@ -9,7 +9,6 @@ import org.apache.logging.log4j.LogManager
 import org.opensearch.alerting.model.MonitorRunResult
 import org.opensearch.alerting.model.QueryLevelTriggerRunResult
 import org.opensearch.alerting.opensearchapi.InjectorContextElement
-import org.opensearch.alerting.opensearchapi.convertToMap
 import org.opensearch.alerting.opensearchapi.withClosableContext
 import org.opensearch.alerting.script.QueryLevelTriggerExecutionContext
 import org.opensearch.alerting.util.isADMonitor
