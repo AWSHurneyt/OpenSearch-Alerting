@@ -68,7 +68,7 @@ object QueryLevelMonitorRunner : MonitorRunner() {
             val triggerCtx = QueryLevelTriggerExecutionContext(monitor, trigger as QueryLevelTrigger, monitorResult, currentAlert)
             val triggerResult = monitorCtx.triggerService!!.runQueryLevelTrigger(monitor, trigger, triggerCtx)
 
-            logger.info("hurneyt triggerResult = ${triggerResult.convertToMap()}")
+            logger.info("hurneyt triggerResult = {}", triggerResult)
 
             triggerResults[trigger.id] = triggerResult
 
