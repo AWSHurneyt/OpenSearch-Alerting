@@ -9,14 +9,18 @@ import org.apache.logging.log4j.LogManager
 import org.opensearch.alerting.chainedAlertCondition.parsers.ChainedAlertExpressionParser
 import org.opensearch.alerting.model.BucketLevelTriggerRunResult
 import org.opensearch.alerting.model.ChainedAlertTriggerRunResult
+import org.opensearch.alerting.model.ClusterMetricsTriggerRunResult
+import org.opensearch.alerting.model.ClusterMetricsTriggerRunResult.ClusterTriggerResult
 import org.opensearch.alerting.model.DocumentLevelTriggerRunResult
 import org.opensearch.alerting.model.QueryLevelTriggerRunResult
 import org.opensearch.alerting.script.BucketLevelTriggerExecutionContext
 import org.opensearch.alerting.script.QueryLevelTriggerExecutionContext
 import org.opensearch.alerting.script.TriggerScript
 import org.opensearch.alerting.triggercondition.parsers.TriggerExpressionParser
+import org.opensearch.alerting.util.CrossClusterMonitorUtils
 import org.opensearch.alerting.util.getBucketKeysHash
 import org.opensearch.alerting.workflow.WorkflowRunContext
+import org.opensearch.cluster.service.ClusterService
 import org.opensearch.commons.alerting.aggregation.bucketselectorext.BucketSelectorIndices.Fields.BUCKET_INDICES
 import org.opensearch.commons.alerting.aggregation.bucketselectorext.BucketSelectorIndices.Fields.PARENT_BUCKET_PATH
 import org.opensearch.commons.alerting.model.AggregationResultBucket
@@ -67,6 +71,63 @@ class TriggerService(val scriptService: ScriptService) {
             // if the script fails we need to send an alert so set triggered = true
             QueryLevelTriggerRunResult(trigger.name, true, e)
         }
+    }
+
+    fun runClusterMetricsTrigger(
+        monitor: Monitor,
+        trigger: QueryLevelTrigger,
+        ctx: QueryLevelTriggerExecutionContext,
+        clusterService: ClusterService
+    ): ClusterMetricsTriggerRunResult {
+        var runResult: ClusterMetricsTriggerRunResult?
+        try {
+            val inputResults = ctx.results.getOrElse(0) { mapOf() }
+            logger.info("hurneyt runClusterMetricsTrigger::inputResults = {}", inputResults)
+            var triggered = false
+            val clusterTriggerResults = mutableListOf<ClusterTriggerResult>()
+            if (CrossClusterMonitorUtils.isRemoteMonitor(monitor, clusterService)) {
+                inputResults.forEach { clusterResult ->
+                    logger.info("hurneyt runClusterMetricsTrigger::clusterResult = {}", clusterResult)
+                    // Reducing the inputResults to only include results from 1 cluster at a time
+                    val clusterTriggerCtx = ctx.copy(results = listOf(mapOf(clusterResult.toPair())))
+
+                    val clusterTriggered = scriptService.compile(trigger.condition, TriggerScript.CONTEXT)
+                        .newInstance(trigger.condition.params)
+                        .execute(clusterTriggerCtx)
+
+                    if (clusterTriggered && !triggered) {
+                        logger.info("hurneyt runClusterMetricsTrigger TRUE")
+                        triggered = clusterTriggered
+                        clusterTriggerResults
+                            .add(ClusterTriggerResult(cluster = clusterResult.key, triggered = clusterTriggered))
+                    } else {
+                        logger.info("hurneyt runClusterMetricsTrigger ELSE triggered = {}", triggered)
+                        logger.info("hurneyt runClusterMetricsTrigger ELSE clusterTriggered = {}", clusterTriggered)
+                    }
+                }
+                logger.info("hurneyt runClusterMetricsTrigger::triggered = {}", triggered)
+                logger.info("hurneyt runClusterMetricsTrigger::triggeredClusters = {}", clusterTriggerResults)
+            } else {
+                logger.info("hurneyt runClusterMetricsTrigger ELSE")
+                triggered = scriptService.compile(trigger.condition, TriggerScript.CONTEXT)
+                    .newInstance(trigger.condition.params)
+                    .execute(ctx)
+                if (triggered) clusterTriggerResults
+                    .add(ClusterTriggerResult(cluster = clusterService.clusterName.value(), triggered = triggered))
+            }
+            runResult = ClusterMetricsTriggerRunResult(
+                triggerName = trigger.name,
+                triggered = triggered,
+                error = null,
+                clusterTriggerResults = clusterTriggerResults
+            )
+            logger.info("hurneyt runClusterMetricsTrigger::runResult = {}", runResult)
+        } catch (e: Exception) {
+            logger.info("Error running script for monitor ${monitor.id}, trigger: ${trigger.id}", e)
+            // if the script fails we need to send an alert so set triggered = true
+            runResult = ClusterMetricsTriggerRunResult(trigger.name, true, e)
+        }
+        return runResult!!
     }
 
     // TODO: improve performance and support match all and match any

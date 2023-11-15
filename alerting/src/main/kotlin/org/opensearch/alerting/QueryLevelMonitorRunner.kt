@@ -62,10 +62,19 @@ object QueryLevelMonitorRunner : MonitorRunner() {
 
         val updatedAlerts = mutableListOf<Alert>()
         val triggerResults = mutableMapOf<String, QueryLevelTriggerRunResult>()
+        logger.info("hurneyt currentAlerts = {}", currentAlerts)
         for (trigger in monitor.triggers) {
             val currentAlert = currentAlerts[trigger]
+            logger.info("hurneyt currentAlert = {}", currentAlert)
             val triggerCtx = QueryLevelTriggerExecutionContext(monitor, trigger as QueryLevelTrigger, monitorResult, currentAlert)
-            val triggerResult = monitorCtx.triggerService!!.runQueryLevelTrigger(monitor, trigger, triggerCtx)
+            val triggerResult = when (monitor.monitorType) {
+                Monitor.MonitorType.QUERY_LEVEL_MONITOR ->
+                    monitorCtx.triggerService!!.runQueryLevelTrigger(monitor, trigger, triggerCtx)
+                Monitor.MonitorType.CLUSTER_METRICS_MONITOR ->
+                    monitorCtx.triggerService!!.runClusterMetricsTrigger(monitor, trigger, triggerCtx, monitorCtx.clusterService!!)
+                else ->
+                    throw IllegalArgumentException("Unsupported monitor type: ${monitor.monitorType.name}.")
+            }
 
             logger.info("hurneyt triggerResult = {}", triggerResult)
 

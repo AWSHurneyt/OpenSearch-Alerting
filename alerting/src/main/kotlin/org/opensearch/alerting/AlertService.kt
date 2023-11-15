@@ -20,6 +20,7 @@ import org.opensearch.action.search.SearchResponse
 import org.opensearch.action.support.WriteRequest
 import org.opensearch.alerting.alerts.AlertIndices
 import org.opensearch.alerting.model.ActionRunResult
+import org.opensearch.alerting.model.ClusterMetricsTriggerRunResult
 import org.opensearch.alerting.model.QueryLevelTriggerRunResult
 import org.opensearch.alerting.opensearchapi.firstFailureOrNull
 import org.opensearch.alerting.opensearchapi.retry
@@ -169,6 +170,18 @@ class AlertService(
             )
         }
 
+        // Including a list of triggered clusters for cluster metrics monitors
+        var triggeredClusters: MutableList<String>? = null
+        logger.info("hurneyt composeQueryLevelAlert result is ClusterMetricsTriggerRunResult = {}", (result is ClusterMetricsTriggerRunResult))
+        if (result is ClusterMetricsTriggerRunResult)
+            result.clusterTriggerResults.forEach {
+                logger.info("hurneyt composeQueryLevelAlert::it = {}", it)
+                if (it.triggered) {
+                    if (triggeredClusters.isNullOrEmpty()) triggeredClusters = mutableListOf()
+                    triggeredClusters!!.add(it.cluster)
+                }
+            }
+
         // Merge the alert's error message to the current alert's history
         val updatedHistory = currentAlert?.errorHistory.update(alertError)
         return if (alertError == null && !result.triggered) {
@@ -178,7 +191,8 @@ class AlertService(
                 errorMessage = null,
                 errorHistory = updatedHistory,
                 actionExecutionResults = updatedActionExecutionResults,
-                schemaVersion = IndexUtils.alertIndexSchemaVersion
+                schemaVersion = IndexUtils.alertIndexSchemaVersion,
+                clusters = triggeredClusters
             )
         } else if (alertError == null && currentAlert?.isAcknowledged() == true) {
             null
@@ -191,6 +205,7 @@ class AlertService(
                 errorHistory = updatedHistory,
                 actionExecutionResults = updatedActionExecutionResults,
                 schemaVersion = IndexUtils.alertIndexSchemaVersion,
+                clusters = triggeredClusters
             )
         } else {
             val alertState = if (workflorwRunContext?.auditDelegateMonitorAlerts == true) {
