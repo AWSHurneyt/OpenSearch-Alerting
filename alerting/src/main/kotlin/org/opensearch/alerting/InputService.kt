@@ -140,13 +140,15 @@ class InputService(
                                     }
                                 }
                             }
+                            logger.info("hurneyt ClusterMetricsInput::responseMap = {}", responseMap)
                             results += responseMap
+                            logger.info("hurneyt ClusterMetricsInput::results 1 = {}", results)
                         } else {
                             logger.info("hurneyt ClusterMetricsInput NO REMOTE CLUSTERS")
                             val response = executeTransportAction(input, client)
                             results += response.toMap()
                         }
-                        logger.info("hurneyt ClusterMetricsInput::results = $results")
+                        logger.info("hurneyt ClusterMetricsInput::results 2 = {}", results)
                     }
                     else -> {
                         throw IllegalArgumentException("Unsupported input type: ${input.name()}.")
