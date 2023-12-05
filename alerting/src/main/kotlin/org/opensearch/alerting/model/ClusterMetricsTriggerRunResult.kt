@@ -91,6 +91,8 @@ data class ClusterMetricsTriggerRunResult(
         )
 
         override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
+            logger.info("hurrneyt ClusterTriggerResult::toXContent cluster = {}", cluster)
+            logger.info("hurrneyt ClusterTriggerResult::toXContent triggered = {}", triggered)
             return builder.startObject(cluster)
                 .field(TRIGGERED_FIELD, triggered)
                 .endObject()
