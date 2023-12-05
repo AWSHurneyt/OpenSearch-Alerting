@@ -5,6 +5,7 @@
 
 package org.opensearch.alerting.model
 
+import org.apache.logging.log4j.LogManager
 import org.opensearch.common.io.stream.StreamInput
 import org.opensearch.common.io.stream.StreamOutput
 import org.opensearch.common.io.stream.Writeable
@@ -15,6 +16,8 @@ import org.opensearch.core.xcontent.XContentBuilder
 import org.opensearch.script.ScriptException
 import java.io.IOException
 import java.time.Instant
+
+private val logger = LogManager.getLogger(ClusterMetricsTriggerRunResult::class.java)
 
 data class ClusterMetricsTriggerRunResult(
     override var triggerName: String,
@@ -52,6 +55,7 @@ data class ClusterMetricsTriggerRunResult(
     }
 
     override fun internalXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
+        logger.info("hurrneyt ClusterMetricsTriggerRunResult::internalXContent clusterTriggerResults = {}", clusterTriggerResults)
         if (error is ScriptException) error = Exception((error as ScriptException).toJsonString(), error)
         return builder
             .field(TRIGGERED_FIELD, triggered)
