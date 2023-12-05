@@ -57,10 +57,12 @@ data class ClusterMetricsTriggerRunResult(
     override fun internalXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         logger.info("hurrneyt ClusterMetricsTriggerRunResult::internalXContent clusterTriggerResults = {}", clusterTriggerResults)
         if (error is ScriptException) error = Exception((error as ScriptException).toJsonString(), error)
-        return builder
+        builder
             .field(TRIGGERED_FIELD, triggered)
             .field(ACTION_RESULTS_FIELD, actionResults as Map<String, ActionRunResult>)
-            .field(CLUSTER_RESULTS_FIELD, clusterTriggerResults)
+            .startArray(CLUSTER_RESULTS_FIELD)
+        clusterTriggerResults.forEach { it.toXContent(builder, params) }
+        return builder.endArray()
     }
 
     @Throws(IOException::class)
