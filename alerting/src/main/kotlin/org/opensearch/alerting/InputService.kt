@@ -139,10 +139,10 @@ class InputService(
                                         responseMap[cluster] = response.toMap()
                                     }
                                 }
+                                logger.info("hurneyt ClusterMetricsInput::responseMap = {}", responseMap)
+                                results += responseMap
+                                logger.info("hurneyt ClusterMetricsInput::results 1 = {}", results)
                             }
-                            logger.info("hurneyt ClusterMetricsInput::responseMap = {}", responseMap)
-                            results += responseMap
-                            logger.info("hurneyt ClusterMetricsInput::results 1 = {}", results)
                         } else {
                             logger.info("hurneyt ClusterMetricsInput NO REMOTE CLUSTERS")
                             val response = executeTransportAction(input, client)
