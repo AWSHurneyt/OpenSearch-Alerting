@@ -181,10 +181,12 @@ class AlertService(
                     triggeredClusters!!.add(it.cluster)
                 }
             }
+        logger.info("hurneyt composeQueryLevelAlert::triggeredClusters = {}", triggeredClusters)
 
         // Merge the alert's error message to the current alert's history
         val updatedHistory = currentAlert?.errorHistory.update(alertError)
         return if (alertError == null && !result.triggered) {
+            logger.info("hurneyt composeQueryLevelAlert IF 1")
             currentAlert?.copy(
                 state = Alert.State.COMPLETED,
                 endTime = currentTime,
@@ -195,8 +197,10 @@ class AlertService(
                 clusters = triggeredClusters
             )
         } else if (alertError == null && currentAlert?.isAcknowledged() == true) {
+            logger.info("hurneyt composeQueryLevelAlert IF 2")
             null
         } else if (currentAlert != null) {
+            logger.info("hurneyt composeQueryLevelAlert IF 3")
             val alertState = if (alertError == null) Alert.State.ACTIVE else Alert.State.ERROR
             currentAlert.copy(
                 state = alertState,
@@ -208,6 +212,7 @@ class AlertService(
                 clusters = triggeredClusters
             )
         } else {
+            logger.info("hurneyt composeQueryLevelAlert IF 4")
             val alertState = if (workflorwRunContext?.auditDelegateMonitorAlerts == true) {
                 Alert.State.AUDIT
             } else if (alertError == null) Alert.State.ACTIVE
