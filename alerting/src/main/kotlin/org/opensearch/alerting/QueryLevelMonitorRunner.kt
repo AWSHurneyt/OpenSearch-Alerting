@@ -96,6 +96,7 @@ object QueryLevelMonitorRunner : MonitorRunner() {
             )
             if (updatedAlert != null) updatedAlerts += updatedAlert
         }
+        logger.info("hurneyt updatedAlerts = {}", updatedAlerts)
 
         // Don't save alerts if this is a test monitor
         if (!dryrun && monitor.id != Monitor.NO_ID) {
