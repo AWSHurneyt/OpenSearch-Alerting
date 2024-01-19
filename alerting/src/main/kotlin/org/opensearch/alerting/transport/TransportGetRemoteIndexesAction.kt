@@ -26,7 +26,6 @@ import org.opensearch.alerting.action.GetRemoteIndexesResponse.ClusterIndexes.Cl
 import org.opensearch.alerting.opensearchapi.suspendUntil
 import org.opensearch.alerting.util.AlertingException
 import org.opensearch.alerting.util.CrossClusterMonitorUtils
-import org.opensearch.alerting.util.clusterMetricsMonitorHelpers.toMap
 import org.opensearch.client.Client
 import org.opensearch.cluster.service.ClusterService
 import org.opensearch.common.inject.Inject
