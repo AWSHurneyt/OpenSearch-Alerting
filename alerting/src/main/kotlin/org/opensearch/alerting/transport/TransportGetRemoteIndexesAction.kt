@@ -66,7 +66,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                 var resolveIndexResponse: ResolveIndexAction.Response? = null
                 try {
                     resolveIndexResponse = getRemoteClusters(CrossClusterMonitorUtils.parseIndexesForRemoteSearch(request.indexes, clusterService))
-                    log.info("hurneyt TransportGetRemoteIndexesAction::resolveIndexResponse = {}", resolveIndexResponse.toMap())
+                    log.info("hurneyt TransportGetRemoteIndexesAction::resolveIndexResponse = {}", resolveIndexResponse)
                 } catch (e: Exception) {
                     log.error("Failed to retrieve indexes for request $request", e)
                     listener.onFailure(AlertingException.wrap(e))
@@ -136,6 +136,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
     }
 
     private suspend fun getRemoteClusters(parsedIndexes: List<String>): ResolveIndexAction.Response {
+        log.info("hurneyt getRemoteClusters::parsedIndexes = {}", parsedIndexes)
         val resolveRequest = ResolveIndexAction.Request(
             parsedIndexes.toTypedArray(),
             ResolveIndexAction.Request.DEFAULT_INDICES_OPTIONS
