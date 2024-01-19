@@ -26,6 +26,7 @@ import org.opensearch.alerting.action.GetRemoteIndexesResponse.ClusterIndexes.Cl
 import org.opensearch.alerting.opensearchapi.suspendUntil
 import org.opensearch.alerting.util.AlertingException
 import org.opensearch.alerting.util.CrossClusterMonitorUtils
+import org.opensearch.alerting.util.clusterMetricsMonitorHelpers.toMap
 import org.opensearch.client.Client
 import org.opensearch.cluster.service.ClusterService
 import org.opensearch.common.inject.Inject
@@ -65,7 +66,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                 var resolveIndexResponse: ResolveIndexAction.Response? = null
                 try {
                     resolveIndexResponse = getRemoteClusters(CrossClusterMonitorUtils.parseIndexesForRemoteSearch(request.indexes, clusterService))
-                    log.info("hurneyt TransportGetRemoteIndexesAction::resolveIndexResponse = {}", resolveIndexResponse)
+                    log.info("hurneyt TransportGetRemoteIndexesAction::resolveIndexResponse = {}", resolveIndexResponse.toMap())
                 } catch (e: Exception) {
                     log.error("Failed to retrieve indexes for request $request", e)
                     listener.onFailure(AlertingException.wrap(e))
@@ -127,6 +128,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                         )
                     )
                 }
+                log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesList = {}", clusterIndexesList)
                 log.info("hurneyt TransportGetRemoteIndexesAction END")
                 listener.onResponse(GetRemoteIndexesResponse(clusterIndexes = clusterIndexesList))
             }
