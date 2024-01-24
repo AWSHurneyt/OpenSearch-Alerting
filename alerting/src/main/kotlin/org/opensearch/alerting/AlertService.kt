@@ -222,7 +222,8 @@ class AlertService(
                 lastNotificationTime = currentTime, state = alertState, errorMessage = alertError?.message,
                 errorHistory = updatedHistory, actionExecutionResults = updatedActionExecutionResults,
                 schemaVersion = IndexUtils.alertIndexSchemaVersion, executionId = executionId,
-                workflowId = workflorwRunContext?.workflowId ?: ""
+                workflowId = workflorwRunContext?.workflowId ?: "",
+                clusters = triggeredClusters
             )
         }
     }
