@@ -32,7 +32,11 @@ import org.opensearch.client.Client
 import org.opensearch.cluster.service.ClusterService
 import org.opensearch.common.inject.Inject
 import org.opensearch.common.settings.Settings
+import org.opensearch.common.xcontent.XContentType
+import org.opensearch.commons.alerting.util.string
 import org.opensearch.core.xcontent.NamedXContentRegistry
+import org.opensearch.core.xcontent.ToXContent
+import org.opensearch.core.xcontent.XContentBuilder
 import org.opensearch.tasks.Task
 import org.opensearch.transport.TransportService
 import java.time.Duration
@@ -67,7 +71,10 @@ class TransportGetRemoteIndexesAction @Inject constructor(
         log.info("hurneyt TransportGetRemoteIndexesAction START")
         val user = readUserFromThreadContext(client)
         log.info("hurneyt TransportGetRemoteIndexesAction::user isNull = {}", user == null)
-        log.info("hurneyt TransportGetRemoteIndexesAction::user = {}", user?.convertToMap())
+        log.info(
+            "hurneyt TransportGetRemoteIndexesAction::user = {}",
+            user?.toXContent(XContentBuilder.builder(XContentType.JSON.xContent()), ToXContent.EMPTY_PARAMS)?.string()
+        )
 
         if (!validateUserBackendRoles(user, actionListener)) {
             return
