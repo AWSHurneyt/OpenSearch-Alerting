@@ -66,6 +66,8 @@ class TransportGetRemoteIndexesAction @Inject constructor(
     ) {
         log.info("hurneyt TransportGetRemoteIndexesAction START")
         val user = readUserFromThreadContext(client)
+        log.info("hurneyt TransportGetRemoteIndexesAction::user isNull = {}", user == null)
+        log.info("hurneyt TransportGetRemoteIndexesAction::user = {}", user?.convertToMap())
 
         if (!validateUserBackendRoles(user, actionListener)) {
             return
