@@ -23,7 +23,9 @@ import org.opensearch.alerting.action.GetRemoteIndexesRequest
 import org.opensearch.alerting.action.GetRemoteIndexesResponse
 import org.opensearch.alerting.action.GetRemoteIndexesResponse.ClusterIndexes
 import org.opensearch.alerting.action.GetRemoteIndexesResponse.ClusterIndexes.ClusterIndex
+import org.opensearch.alerting.opensearchapi.convertToMap
 import org.opensearch.alerting.opensearchapi.suspendUntil
+import org.opensearch.alerting.settings.AlertingSettings
 import org.opensearch.alerting.util.AlertingException
 import org.opensearch.alerting.util.CrossClusterMonitorUtils
 import org.opensearch.client.Client
@@ -51,13 +53,24 @@ class TransportGetRemoteIndexesAction @Inject constructor(
     transportService,
     actionFilters,
     ::GetRemoteIndexesRequest
-) {
+),
+    SecureTransportAction {
+
+    @Volatile
+    override var filterByEnabled = AlertingSettings.FILTER_BY_BACKEND_ROLES.get(settings)
+
     override fun doExecute(
         task: Task,
         request: GetRemoteIndexesRequest,
-        listener: ActionListener<GetRemoteIndexesResponse>
+        actionListener: ActionListener<GetRemoteIndexesResponse>
     ) {
         log.info("hurneyt TransportGetRemoteIndexesAction START")
+        val user = readUserFromThreadContext(client)
+
+        if (!validateUserBackendRoles(user, actionListener)) {
+            return
+        }
+
         client.threadPool().threadContext.stashContext().use {
             scope.launch {
                 val clusterIndexesList = mutableListOf<ClusterIndexes>()
@@ -65,10 +78,10 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                 var resolveIndexResponse: ResolveIndexAction.Response? = null
                 try {
                     resolveIndexResponse = getRemoteClusters(CrossClusterMonitorUtils.parseIndexesForRemoteSearch(request.indexes, clusterService))
-                    log.info("hurneyt TransportGetRemoteIndexesAction::resolveIndexResponse = {}", resolveIndexResponse)
+                    log.info("hurneyt TransportGetRemoteIndexesAction::resolveIndexResponse = {}", resolveIndexResponse.convertToMap())
                 } catch (e: Exception) {
                     log.error("Failed to retrieve indexes for request $request", e)
-                    listener.onFailure(AlertingException.wrap(e))
+                    actionListener.onFailure(AlertingException.wrap(e))
                 }
 
                 val resolvedIndexes = resolveIndexResponse?.indices?.map { it.name } ?: emptyList()
@@ -88,7 +101,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                         clusterHealthResponse = getHealthStatuses(targetClient, indexes)
                     } catch (e: Exception) {
                         log.error("Failed to retrieve health statuses for request $request", e)
-                        listener.onFailure(AlertingException.wrap(e))
+                        actionListener.onFailure(AlertingException.wrap(e))
                     }
                     val endTime = Instant.now()
 
@@ -102,7 +115,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                             mappingsResponse = getIndexMappings(targetClient, indexes)
                         } catch (e: Exception) {
                             log.error("Failed to retrieve mappings for request $request", e)
-                            listener.onFailure(AlertingException.wrap(e))
+                            actionListener.onFailure(AlertingException.wrap(e))
                         }
                     }
 
@@ -129,7 +142,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                 }
                 log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesList = {}", clusterIndexesList)
                 log.info("hurneyt TransportGetRemoteIndexesAction END")
-                listener.onResponse(GetRemoteIndexesResponse(clusterIndexes = clusterIndexesList))
+                actionListener.onResponse(GetRemoteIndexesResponse(clusterIndexes = clusterIndexesList))
             }
         }
     }
