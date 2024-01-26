@@ -81,13 +81,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
             return
         }
 
-        val userStr = client.threadPool().threadContext
-            .getTransient<String>(ConfigConstants.OPENSEARCH_SECURITY_USER_INFO_THREAD_CONTEXT)
-        log.info("hurneyt TransportGetRemoteIndexesAction::userStr = {}", userStr)
-
         client.threadPool().threadContext.stashContext().use {
-            if (userStr.isNotEmpty()) client.threadPool().threadContext.putTransient(ConfigConstants.INJECTED_USER, userStr)
-
             scope.launch {
                 val clusterIndexesList = mutableListOf<ClusterIndexes>()
 
@@ -170,9 +164,14 @@ class TransportGetRemoteIndexesAction @Inject constructor(
             ResolveIndexAction.Request.DEFAULT_INDICES_OPTIONS
         )
 
+        val userStr = client.threadPool().threadContext
+            .getTransient<String>(ConfigConstants.OPENSEARCH_SECURITY_USER_INFO_THREAD_CONTEXT)
+        log.info("hurneyt TransportGetRemoteIndexesAction::userStr = {}", userStr)
+
         return client.suspendUntil {
+            if (userStr.isNotEmpty()) threadPool().threadContext.putTransient(ConfigConstants.INJECTED_USER, userStr)
             // TODO hurneyt: return aliases as well
-            client.admin().indices().resolveIndex(resolveRequest, it)
+            admin().indices().resolveIndex(resolveRequest, it)
         }
     }
     private suspend fun getHealthStatuses(targetClient: Client, parsedIndexesNames: List<String>): ClusterHealthResponse {
