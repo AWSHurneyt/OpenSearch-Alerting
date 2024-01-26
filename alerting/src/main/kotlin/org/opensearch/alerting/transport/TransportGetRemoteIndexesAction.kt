@@ -85,8 +85,14 @@ class TransportGetRemoteIndexesAction @Inject constructor(
             .getTransient<String>(ConfigConstants.OPENSEARCH_SECURITY_USER_INFO_THREAD_CONTEXT)
         log.info("hurneyt TransportGetRemoteIndexesAction::userStr = {}", userStr)
 
+        val userStr2 = client.threadPool().threadContext
+            .getTransient<String>(ConfigConstants.INJECTED_USER)
+        log.info("hurneyt TransportGetRemoteIndexesAction::userStr2 = {}", userStr2)
+
         client.threadPool().threadContext.stashContext().use {
-            client.threadPool().threadContext.putTransient(ConfigConstants.OPENSEARCH_SECURITY_USER_INFO_THREAD_CONTEXT, userStr)
+            if (userStr2.isNotEmpty())
+                client.threadPool().threadContext.putTransient(ConfigConstants.INJECTED_USER, userStr2)
+
             scope.launch {
                 val clusterIndexesList = mutableListOf<ClusterIndexes>()
 
