@@ -87,6 +87,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
 
         client.threadPool().threadContext.stashContext().use {
             if (userStr.isNotEmpty()) client.threadPool().threadContext.putTransient(ConfigConstants.INJECTED_USER, userStr)
+            if (userStr.isNotEmpty()) client.threadPool().threadContext.putTransient(ConfigConstants.OPENSEARCH_SECURITY_USER_INFO_THREAD_CONTEXT, userStr)
             scope.launch {
                 val clusterIndexesList = mutableListOf<ClusterIndexes>()
 
