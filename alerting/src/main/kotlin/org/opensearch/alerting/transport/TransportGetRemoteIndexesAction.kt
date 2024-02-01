@@ -100,7 +100,9 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                     actionListener.onFailure(AlertingException.wrap(e))
                 }
 
-                val resolvedIndexes = resolveIndexResponse?.indices?.map { it.name } ?: emptyList()
+                val resolvedIndexes: MutableList<String> = mutableListOf()
+                resolveIndexResponse?.indices?.forEach { resolvedIndexes.add(it.name) }
+                resolveIndexResponse?.aliases?.forEach { resolvedIndexes.add(it.name) }
                 log.info("hurneyt TransportGetRemoteIndexesAction::resolvedIndexes = {}", resolvedIndexes)
 
                 val clusterIndexesMap = CrossClusterMonitorUtils.separateClusterIndexes(resolvedIndexes, clusterService)
@@ -171,7 +173,6 @@ class TransportGetRemoteIndexesAction @Inject constructor(
         )
 
         return client.suspendUntil {
-            // TODO hurneyt: return aliases as well
             admin().indices().resolveIndex(resolveRequest, it)
         }
     }
