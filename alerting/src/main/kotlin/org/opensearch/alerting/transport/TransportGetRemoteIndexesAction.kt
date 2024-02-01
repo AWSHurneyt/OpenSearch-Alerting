@@ -33,7 +33,6 @@ import org.opensearch.cluster.service.ClusterService
 import org.opensearch.common.inject.Inject
 import org.opensearch.common.settings.Settings
 import org.opensearch.common.xcontent.XContentType
-import org.opensearch.commons.ConfigConstants
 import org.opensearch.commons.alerting.util.string
 import org.opensearch.core.xcontent.NamedXContentRegistry
 import org.opensearch.core.xcontent.ToXContent
@@ -81,13 +80,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
             return
         }
 
-        val userStr = client.threadPool().threadContext
-            .getTransient<String>(ConfigConstants.OPENSEARCH_SECURITY_USER_INFO_THREAD_CONTEXT)
-        log.info("hurneyt TransportGetRemoteIndexesAction::userStr = {}", userStr)
-
         client.threadPool().threadContext.stashContext().use {
-            if (userStr.isNotEmpty()) client.threadPool().threadContext.putTransient(ConfigConstants.INJECTED_USER, userStr)
-            if (userStr.isNotEmpty()) client.threadPool().threadContext.putTransient(ConfigConstants.OPENSEARCH_SECURITY_USER_INFO_THREAD_CONTEXT, userStr)
             scope.launch {
                 val clusterIndexesList = mutableListOf<ClusterIndexes>()
 
