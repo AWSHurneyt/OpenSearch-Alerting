@@ -80,8 +80,9 @@ class TransportGetRemoteIndexesAction @Inject constructor(
             return
         }
 
-        client.use {
+        client.threadPool().threadContext.stashContext().use {
             scope.launch {
+                it.restore()
                 val clusterIndexesList = mutableListOf<ClusterIndexes>()
 
                 var resolveIndexResponse: ResolveIndexAction.Response? = null
