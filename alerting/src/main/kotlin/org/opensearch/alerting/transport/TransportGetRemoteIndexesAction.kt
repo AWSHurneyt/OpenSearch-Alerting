@@ -84,7 +84,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
 
         client.threadPool().threadContext.stashContext().use {
             scope.launch {
-                val singleThreadContext = newSingleThreadContext("${GetRemoteIndexesAction.NAME}_thread")
+                val singleThreadContext = newSingleThreadContext("GetRemoteIndexesActionThread")
                 withContext(singleThreadContext) {
                     it.restore()
                     val clusterIndexesList = mutableListOf<ClusterIndexes>()
