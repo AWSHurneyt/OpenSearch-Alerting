@@ -134,14 +134,16 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                     }
 
                     val clusterIndexList = mutableListOf<ClusterIndex>()
-                    indexes.forEach {
-                        clusterIndexList.add(
-                            ClusterIndex(
-                                indexName = it,
-                                indexHealth = clusterHealthResponse!!.indices[it]!!.status,
-                                mappings = mappingsResponse?.mappings?.get(it)
+                    if (clusterHealthResponse != null) {
+                        indexes.forEach {
+                            clusterIndexList.add(
+                                ClusterIndex(
+                                    indexName = it,
+                                    indexHealth = clusterHealthResponse.indices[it]!!.status,
+                                    mappings = mappingsResponse?.mappings?.get(it)
+                                )
                             )
-                        )
+                        }
                     }
 
                     clusterIndexesList.add(
@@ -176,9 +178,12 @@ class TransportGetRemoteIndexesAction @Inject constructor(
         val clusterHealthRequest = ClusterHealthRequest()
             .indices(*parsedIndexesNames.toTypedArray())
             .indicesOptions(IndicesOptions.lenientExpandHidden())
-        return targetClient.suspendUntil {
-            admin().cluster().health(clusterHealthRequest, it)
-        }
+
+        return client.suspendUntil { targetClient.admin().cluster().health(clusterHealthRequest, it) }
+        // TODO hurneyt delete
+//        return targetClient.suspendUntil {
+//            admin().cluster().health(clusterHealthRequest, it)
+//        }
     }
 
     private suspend fun getIndexMappings(targetClient: Client, parsedIndexNames: List<String>): GetMappingsResponse {
