@@ -141,7 +141,6 @@ class InputService(
                                         // Mapping each response to the cluster name before adding to results.
                                         // Not adding this same logic for local-only monitors to avoid breaking existing monitors.
                                         responseMap[cluster] = response.toMap()
-
                                     }
                                     results += responseMap
                                 }
