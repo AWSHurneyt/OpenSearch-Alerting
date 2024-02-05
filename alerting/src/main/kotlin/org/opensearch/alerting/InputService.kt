@@ -129,21 +129,22 @@ class InputService(
                         if (remoteMonitoringEnabled && input.clusters.isNotEmpty()) {
                             val responseMap = mutableMapOf<String, Map<String, Any>>()
                             client.threadPool().threadContext.stashContext().use {
-                                input.clusters.forEach { cluster ->
-                                    scope.launch {
+                                scope.launch {
 //                                        val singleThreadContext = newSingleThreadContext("ClusterMetricsInputThread")
 //                                        withContext(singleThreadContext) {
 //
 //                                        }
+                                    input.clusters.forEach { cluster ->
                                         val targetClient = CrossClusterMonitorUtils.getClientForCluster(cluster, client, clusterService)
                                         val response = executeTransportAction(input, targetClient)
                                         // Not all supported API reference the cluster name in their response.
                                         // Mapping each response to the cluster name before adding to results.
                                         // Not adding this same logic for local-only monitors to avoid breaking existing monitors.
                                         responseMap[cluster] = response.toMap()
+
                                     }
+                                    results += responseMap
                                 }
-                                results += responseMap
                             }
                             // todo hurneyt delete?
 //                            while (responseMap.size < input.clusters.size) {
