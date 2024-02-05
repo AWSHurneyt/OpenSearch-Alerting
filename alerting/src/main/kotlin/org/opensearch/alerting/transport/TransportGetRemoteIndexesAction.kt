@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
+import org.opensearch.OpenSearchStatusException
 import org.opensearch.action.ActionListener
 import org.opensearch.action.admin.cluster.health.ClusterHealthRequest
 import org.opensearch.action.admin.cluster.health.ClusterHealthResponse
@@ -35,6 +36,7 @@ import org.opensearch.cluster.service.ClusterService
 import org.opensearch.common.inject.Inject
 import org.opensearch.common.settings.Settings
 import org.opensearch.core.xcontent.NamedXContentRegistry
+import org.opensearch.rest.RestStatus
 import org.opensearch.tasks.Task
 import org.opensearch.transport.TransportService
 import java.time.Duration
@@ -74,8 +76,14 @@ class TransportGetRemoteIndexesAction @Inject constructor(
     ) {
         // todo hurneyt change to debug
         log.info("Remote monitoring enabled: {}", remoteMonitoringEnabled)
-
-        if (!remoteMonitoringEnabled) return
+        if (!remoteMonitoringEnabled) {
+            actionListener.onFailure(
+                AlertingException.wrap(
+                    OpenSearchStatusException("Remote monitoring is not enabled.", RestStatus.FORBIDDEN)
+                )
+            )
+            return
+        }
 
         val user = readUserFromThreadContext(client)
         if (!validateUserBackendRoles(user, actionListener)) return
