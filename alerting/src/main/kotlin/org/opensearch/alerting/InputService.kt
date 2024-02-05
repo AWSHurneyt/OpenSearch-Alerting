@@ -121,7 +121,8 @@ class InputService(
                     }
                     is ClusterMetricsInput -> {
                         logger.debug("ClusterMetricsInput clusterMetricType: ${input.clusterMetricType}")
-                        val remoteMonitoringEnabled = AlertingSettings.REMOTE_MONITORING_ENABLED.get(settings)
+
+                        val remoteMonitoringEnabled = clusterService.clusterSettings.get(AlertingSettings.REMOTE_MONITORING_ENABLED)
                         // todo hurneyt make debug
                         logger.info("ClusterMetricsInput remoteMonitoringEnabled: $remoteMonitoringEnabled")
 

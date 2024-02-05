@@ -11,6 +11,7 @@ import org.opensearch.alerting.model.QueryLevelTriggerRunResult
 import org.opensearch.alerting.opensearchapi.InjectorContextElement
 import org.opensearch.alerting.opensearchapi.withClosableContext
 import org.opensearch.alerting.script.QueryLevelTriggerExecutionContext
+import org.opensearch.alerting.settings.AlertingSettings
 import org.opensearch.alerting.util.isADMonitor
 import org.opensearch.alerting.workflow.WorkflowRunContext
 import org.opensearch.commons.alerting.model.Alert
@@ -68,8 +69,12 @@ object QueryLevelMonitorRunner : MonitorRunner() {
             val triggerResult = when (monitor.monitorType) {
                 Monitor.MonitorType.QUERY_LEVEL_MONITOR ->
                     monitorCtx.triggerService!!.runQueryLevelTrigger(monitor, trigger, triggerCtx)
-                Monitor.MonitorType.CLUSTER_METRICS_MONITOR ->
-                    monitorCtx.triggerService!!.runClusterMetricsTrigger(monitor, trigger, triggerCtx, monitorCtx.clusterService!!)
+                Monitor.MonitorType.CLUSTER_METRICS_MONITOR -> {
+                    val remoteMonitoringEnabled = monitorCtx.clusterService!!.clusterSettings.get(AlertingSettings.REMOTE_MONITORING_ENABLED)
+                    logger.info("hurneyt runMonitor::remoteMonitoringEnabled = $remoteMonitoringEnabled")
+                    if (remoteMonitoringEnabled) monitorCtx.triggerService!!.runClusterMetricsTrigger(monitor, trigger, triggerCtx, monitorCtx.clusterService!!)
+                    else monitorCtx.triggerService!!.runQueryLevelTrigger(monitor, trigger, triggerCtx)
+                }
                 else ->
                     throw IllegalArgumentException("Unsupported monitor type: ${monitor.monitorType.name}.")
             }

@@ -85,12 +85,7 @@ class TriggerService(val scriptService: ScriptService) {
             val inputResults = ctx.results.getOrElse(0) { mapOf() }
             var triggered = false
             val clusterTriggerResults = mutableListOf<ClusterTriggerResult>()
-
-            val remoteMonitoringEnabled = AlertingSettings.REMOTE_MONITORING_ENABLED.get(clusterService.settings)
-            // todo hurneyt make debug
-            logger.info("runClusterMetricsTrigger remoteMonitoringEnabled: $remoteMonitoringEnabled")
-
-            if (remoteMonitoringEnabled && CrossClusterMonitorUtils.isRemoteMonitor(monitor, clusterService)) {
+            if (CrossClusterMonitorUtils.isRemoteMonitor(monitor, clusterService)) {
                 inputResults.forEach { clusterResult ->
                     // Reducing the inputResults to only include results from 1 cluster at a time
                     val clusterTriggerCtx = ctx.copy(results = listOf(mapOf(clusterResult.toPair())))
