@@ -129,8 +129,8 @@ class InputService(
                         logger.info("ClusterMetricsInput remoteMonitoringEnabled: $remoteMonitoringEnabled")
 
                         if (remoteMonitoringEnabled && input.clusters.isNotEmpty()) {
-                            val responseMap = mutableMapOf<String, Map<String, Any>>()
                             client.threadPool().threadContext.stashContext().use {
+                                val responseMap = mutableMapOf<String, Map<String, Any>>()
                                 scope.launch {
                                     val deferredResults = input.clusters.map { cluster ->
                                         async {
