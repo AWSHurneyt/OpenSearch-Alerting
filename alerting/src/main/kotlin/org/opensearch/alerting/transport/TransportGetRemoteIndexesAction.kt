@@ -173,7 +173,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
         log.info("hurneyt getRemoteClusters::parsedIndexes = {}", parsedIndexes)
         val resolveRequest = ResolveIndexAction.Request(
             parsedIndexes.toTypedArray(),
-            IndicesOptions.LENIENT_EXPAND_OPEN_CLOSED
+            ResolveIndexAction.Request.DEFAULT_INDICES_OPTIONS
         )
 
         return client.suspendUntil {
