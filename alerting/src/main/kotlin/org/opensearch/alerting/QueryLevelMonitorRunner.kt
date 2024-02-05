@@ -11,7 +11,6 @@ import org.opensearch.alerting.model.QueryLevelTriggerRunResult
 import org.opensearch.alerting.opensearchapi.InjectorContextElement
 import org.opensearch.alerting.opensearchapi.withClosableContext
 import org.opensearch.alerting.script.QueryLevelTriggerExecutionContext
-import org.opensearch.alerting.settings.AlertingSettings
 import org.opensearch.alerting.util.isADMonitor
 import org.opensearch.alerting.workflow.WorkflowRunContext
 import org.opensearch.commons.alerting.model.Alert
