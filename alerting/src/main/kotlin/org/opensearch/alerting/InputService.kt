@@ -141,8 +141,8 @@ class InputService(
                                 }
                             }
                             // todo hurneyt delete?
-//                            while (responseMap.size < input.clusters.size) {
-//                            }
+                            while (responseMap.size < input.clusters.size) {
+                            }
                             results += responseMap
                         } else {
                             val response = executeTransportAction(input, client)
