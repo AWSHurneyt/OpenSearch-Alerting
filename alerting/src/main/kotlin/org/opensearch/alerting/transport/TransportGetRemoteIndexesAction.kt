@@ -138,7 +138,6 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                         }
 
                         val clusterIndexList = mutableListOf<ClusterIndex>()
-                        log.info("hurneyt TransportGetRemoteIndexesAction::indexes.forEach it = {}", client.threadPool().threadContext.)
                         if (clusterHealthResponse != null) {
                             indexes.forEach {
                                 log.info("hurneyt TransportGetRemoteIndexesAction::indexes.forEach it = {}", it)
