@@ -9,8 +9,6 @@ import org.apache.logging.log4j.LogManager
 import org.opensearch.ExceptionsHelper
 import org.opensearch.OpenSearchStatusException
 import org.opensearch.action.ActionListener
-import org.opensearch.action.admin.cluster.state.ClusterStateRequest
-import org.opensearch.action.admin.cluster.state.ClusterStateResponse
 import org.opensearch.action.index.IndexRequest
 import org.opensearch.action.index.IndexResponse
 import org.opensearch.action.search.SearchAction
@@ -26,7 +24,6 @@ import org.opensearch.alerting.model.userErrorMessage
 import org.opensearch.alerting.opensearchapi.suspendUntil
 import org.opensearch.alerting.script.DocumentLevelTriggerExecutionContext
 import org.opensearch.alerting.util.AlertingException
-import org.opensearch.alerting.util.CrossClusterMonitorUtils
 import org.opensearch.alerting.util.IndexUtils
 import org.opensearch.alerting.util.defaultToPerExecutionAction
 import org.opensearch.alerting.util.getActionExecutionPolicy
@@ -121,29 +118,11 @@ object DocumentLevelMonitorRunner : MonitorRunner() {
 
         try {
             // Resolve all passed indices to concrete indices
-            val indices = mutableListOf<String>()
-            val separatedClusterIndexes = CrossClusterMonitorUtils.separateClusterIndexes(
+            val indices = IndexUtils.resolveAllIndices(
                 docLevelMonitorInput.indices,
-                monitorCtx.clusterService!!
+                monitorCtx.clusterService!!,
+                monitorCtx.indexNameExpressionResolver!!
             )
-            separatedClusterIndexes.forEach { (clusterName, indexes) ->
-                val clusterIndexes = if (clusterName == monitorCtx.clusterService!!.clusterName.value()) {
-                    IndexUtils.resolveAllIndices(
-                        indexes,
-                        monitorCtx.clusterService!!,
-                        MonitorRunnerService.monitorCtx.indexNameExpressionResolver!!
-                    )
-                } else {
-                    val resp: ClusterStateResponse = monitorCtx.client!!.getRemoteClusterClient(clusterName)
-                        .suspendUntil { admin().cluster().state(ClusterStateRequest().routingTable(false).nodes(false)) }
-                    IndexUtils.resolveAllIndices(
-                        indexes,
-                        resp.state,
-                        MonitorRunnerService.monitorCtx.indexNameExpressionResolver!!
-                    )
-                }
-                indices.addAll(clusterIndexes)
-            }
 
             monitorCtx.docLevelMonitorQueries!!.initDocLevelQueryIndex(monitor.dataSources)
             monitorCtx.docLevelMonitorQueries!!.indexDocLevelQueries(

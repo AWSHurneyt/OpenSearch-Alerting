@@ -28,10 +28,6 @@ import org.opensearch.alerting.model.MonitorMetadata
 import org.opensearch.alerting.opensearchapi.suspendUntil
 import org.opensearch.alerting.settings.AlertingSettings
 import org.opensearch.alerting.util.AlertingException
-import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.formatClusterAndIndexName
-import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.getClientForIndex
-import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.parseClusterName
-import org.opensearch.alerting.util.CrossClusterMonitorUtils.Companion.parseIndexName
 import org.opensearch.client.Client
 import org.opensearch.cluster.service.ClusterService
 import org.opensearch.common.settings.Settings
@@ -220,17 +216,15 @@ object MonitorMetadataService :
         val lastRunContext = existingRunContext?.toMutableMap() ?: mutableMapOf()
         try {
             if (index == null) return mutableMapOf()
-            val getIndexRequest = GetIndexRequest().indices(parseIndexName(index))
-            val getIndexResponse: GetIndexResponse = getClientForIndex(index, client, clusterService)
-                .suspendUntil { admin().indices().getIndex(getIndexRequest, it) }
-
+            val getIndexRequest = GetIndexRequest().indices(index)
+            val getIndexResponse: GetIndexResponse = client.suspendUntil {
+                client.admin().indices().getIndex(getIndexRequest, it)
+            }
             val indices = getIndexResponse.indices()
 
-            val clusterAlias = parseClusterName(index)
             indices.forEach { indexName ->
-                val formattedIndex = formatClusterAndIndexName(clusterAlias, indexName)
-                if (!lastRunContext.containsKey(formattedIndex)) {
-                    lastRunContext[indexName] = createRunContextForIndex(formattedIndex)
+                if (!lastRunContext.containsKey(indexName)) {
+                    lastRunContext[indexName] = createRunContextForIndex(indexName)
                 }
             }
         } catch (e: RemoteTransportException) {
@@ -249,9 +243,8 @@ object MonitorMetadataService :
     }
 
     suspend fun createRunContextForIndex(index: String, createdRecently: Boolean = false): MutableMap<String, Any> {
-        val request = IndicesStatsRequest().indices(parseIndexName(index)).clear()
-        val response: IndicesStatsResponse = getClientForIndex(index, client, clusterService)
-            .suspendUntil { execute(IndicesStatsAction.INSTANCE, request, it) }
+        val request = IndicesStatsRequest().indices(index).clear()
+        val response: IndicesStatsResponse = client.suspendUntil { execute(IndicesStatsAction.INSTANCE, request, it) }
         if (response.status != RestStatus.OK) {
             val errorMessage = "Failed fetching index stats for index:$index"
             throw AlertingException(errorMessage, RestStatus.INTERNAL_SERVER_ERROR, IllegalStateException(errorMessage))
