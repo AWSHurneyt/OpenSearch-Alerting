@@ -123,9 +123,7 @@ class InputService(
                         logger.debug("ClusterMetricsInput clusterMetricType: {}", input.clusterMetricType)
 
                         val remoteMonitoringEnabled = clusterService.clusterSettings.get(AlertingSettings.REMOTE_MONITORING_ENABLED)
-                        val inputTimeout = clusterService.clusterSettings.get(AlertingSettings.INPUT_TIMEOUT)
-                        // todo hurneyt make debug
-                        logger.info("ClusterMetricsInput remoteMonitoringEnabled: $remoteMonitoringEnabled")
+                        logger.debug("Remote monitoring enabled: {}", remoteMonitoringEnabled)
 
                         val responseMap = mutableMapOf<String, Map<String, Any>>()
                         if (remoteMonitoringEnabled && input.clusters.isNotEmpty()) {
@@ -141,7 +139,7 @@ class InputService(
                                     }
                                 }
                             }
-                            // todo hurneyt delete?
+                            val inputTimeout = clusterService.clusterSettings.get(AlertingSettings.INPUT_TIMEOUT)
                             val startTime = Instant.now().toEpochMilli()
                             while ((Instant.now().toEpochMilli() - startTime >= inputTimeout.millis) || (responseMap.size < input.clusters.size)) { /* Wait for responses */ }
                             results += responseMap

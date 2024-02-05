@@ -74,8 +74,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
         request: GetRemoteIndexesRequest,
         actionListener: ActionListener<GetRemoteIndexesResponse>
     ) {
-        // todo hurneyt change to debug
-        log.info("Remote monitoring enabled: {}", remoteMonitoringEnabled)
+        log.debug("Remote monitoring enabled: {}", remoteMonitoringEnabled)
         if (!remoteMonitoringEnabled) {
             actionListener.onFailure(
                 AlertingException.wrap(
