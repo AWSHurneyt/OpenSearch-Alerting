@@ -30,7 +30,6 @@ class GetRemoteIndexesRequest : ActionRequest {
     )
 
     override fun validate(): ActionRequestValidationException? {
-        // TODO hurneyt
         return null
     }
 
@@ -41,7 +40,6 @@ class GetRemoteIndexesRequest : ActionRequest {
     }
 
     companion object {
-        // TODO hurneyt: is this companion needed?
         const val INDEXES_FIELD = "indexes"
         const val INCLUDE_MAPPINGS_FIELD = "include_mappings"
     }

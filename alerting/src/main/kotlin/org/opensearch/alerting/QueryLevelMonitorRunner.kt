@@ -11,6 +11,7 @@ import org.opensearch.alerting.model.QueryLevelTriggerRunResult
 import org.opensearch.alerting.opensearchapi.InjectorContextElement
 import org.opensearch.alerting.opensearchapi.withClosableContext
 import org.opensearch.alerting.script.QueryLevelTriggerExecutionContext
+import org.opensearch.alerting.settings.AlertingSettings
 import org.opensearch.alerting.util.isADMonitor
 import org.opensearch.alerting.workflow.WorkflowRunContext
 import org.opensearch.commons.alerting.model.Alert
@@ -62,10 +63,8 @@ object QueryLevelMonitorRunner : MonitorRunner() {
 
         val updatedAlerts = mutableListOf<Alert>()
         val triggerResults = mutableMapOf<String, QueryLevelTriggerRunResult>()
-        logger.info("hurneyt currentAlerts = {}", currentAlerts)
         for (trigger in monitor.triggers) {
             val currentAlert = currentAlerts[trigger]
-            logger.info("hurneyt currentAlert = {}", currentAlert)
             val triggerCtx = QueryLevelTriggerExecutionContext(monitor, trigger as QueryLevelTrigger, monitorResult, currentAlert)
             val triggerResult = when (monitor.monitorType) {
                 Monitor.MonitorType.QUERY_LEVEL_MONITOR ->
@@ -75,8 +74,6 @@ object QueryLevelMonitorRunner : MonitorRunner() {
                 else ->
                     throw IllegalArgumentException("Unsupported monitor type: ${monitor.monitorType.name}.")
             }
-
-            logger.info("hurneyt triggerResult = {}", triggerResult)
 
             triggerResults[trigger.id] = triggerResult
 
@@ -96,7 +93,6 @@ object QueryLevelMonitorRunner : MonitorRunner() {
             )
             if (updatedAlert != null) updatedAlerts += updatedAlert
         }
-        logger.info("hurneyt updatedAlerts = {}", updatedAlerts)
 
         // Don't save alerts if this is a test monitor
         if (!dryrun && monitor.id != Monitor.NO_ID) {

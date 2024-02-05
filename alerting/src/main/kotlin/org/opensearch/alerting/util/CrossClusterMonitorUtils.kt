@@ -151,15 +151,7 @@ class CrossClusterMonitorUtils {
          */
         @JvmStatic
         fun getClientForCluster(clusterName: String, client: Client, localClusterName: String): Client {
-            log.info("hurneyt getClientForCluster::clusterName = $clusterName")
-            log.info("hurneyt getClientForCluster::localClusterName = $localClusterName")
-            return if (clusterName == localClusterName) {
-                log.info("hurneyt getClientForCluster LOCAL")
-                client
-            } else {
-                log.info("hurneyt getClientForCluster REMOTE")
-                client.getRemoteClusterClient(clusterName)
-            }
+            return if (clusterName == localClusterName) client else client.getRemoteClusterClient(clusterName)
         }
 
         /**
@@ -187,14 +179,8 @@ class CrossClusterMonitorUtils {
         @JvmStatic
         fun getClientForIndex(index: String, client: Client, localClusterName: String): Client {
             val clusterName = parseClusterName(index)
-            log.info("hurneyt getClientForIndex::clusterName = $clusterName")
-            return if (clusterName.isNotEmpty() && clusterName != localClusterName) {
-                log.info("hurneyt getClientForIndex REMOTE")
-                client.getRemoteClusterClient(clusterName)
-            } else {
-                log.info("hurneyt getClientForIndex LOCAL")
-                client
-            }
+            return if (clusterName.isNotEmpty() && clusterName != localClusterName)
+                client.getRemoteClusterClient(clusterName) else client
         }
 
         /**

@@ -17,7 +17,6 @@ import org.opensearch.core.xcontent.ToXContentObject
 import org.opensearch.core.xcontent.XContentBuilder
 import java.io.IOException
 
-// TODO hurneyt
 private val log = LogManager.getLogger(GetRemoteIndexesResponse::class.java)
 
 class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {

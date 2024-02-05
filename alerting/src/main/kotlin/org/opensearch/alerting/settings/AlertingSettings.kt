@@ -176,5 +176,12 @@ class AlertingSettings {
             Setting.Property.NodeScope,
             Setting.Property.Dynamic
         )
+
+        val REMOTE_MONITORING_ENABLED = Setting.boolSetting(
+            "plugins.alerting.remote_monitoring_enabled",
+            false,
+            Setting.Property.NodeScope,
+            Setting.Property.Dynamic
+        )
     }
 }

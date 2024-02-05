@@ -218,33 +218,24 @@ object MonitorMetadataService :
         existingRunContext: MutableMap<String, MutableMap<String, Any>>? = null,
     ): MutableMap<String, MutableMap<String, Any>> {
         val lastRunContext = existingRunContext?.toMutableMap() ?: mutableMapOf()
-        log.info("hurneyt createFullRunContext START index = $index")
         try {
             if (index == null) return mutableMapOf()
             val getIndexRequest = GetIndexRequest().indices(parseIndexName(index))
-            log.info("hurneyt createFullRunContext suspendUntil 1 START")
             val getIndexResponse: GetIndexResponse = getClientForIndex(index, client, clusterService)
                 .suspendUntil { admin().indices().getIndex(getIndexRequest, it) }
-            log.info("hurneyt createFullRunContext suspendUntil 1 END")
 
             val indices = getIndexResponse.indices()
 
-            log.info("hurneyt createFullRunContext suspendUntil 2 START")
             val clusterAlias = parseClusterName(index)
-            log.info("hurneyt createFullRunContext suspendUntil clusterAlias = $clusterAlias")
             indices.forEach { indexName ->
-                log.info("hurneyt createFullRunContext suspendUntil indexName = $indexName")
                 val formattedIndex = formatClusterAndIndexName(clusterAlias, indexName)
-                log.info("hurneyt createFullRunContext suspendUntil formattedIndex = $formattedIndex")
                 if (!lastRunContext.containsKey(formattedIndex)) {
-                    log.info("hurneyt createFullRunContext suspendUntil indexName = $indexName !CONTAINS BLOCK")
                     lastRunContext[indexName] = createRunContextForIndex(formattedIndex)
                 }
             }
-            log.info("hurneyt createFullRunContext suspendUntil 2 END")
         } catch (e: RemoteTransportException) {
             val unwrappedException = ExceptionsHelper.unwrapCause(e) as Exception
-            throw AlertingException("Failed fetching index stats hurneyt 1", RestStatus.INTERNAL_SERVER_ERROR, unwrappedException)
+            throw AlertingException("Failed fetching index stats", RestStatus.INTERNAL_SERVER_ERROR, unwrappedException)
         } catch (e: OpenSearchSecurityException) {
             throw AlertingException(
                 "Failed fetching index stats - missing required index permissions: ${e.localizedMessage}",
@@ -252,9 +243,8 @@ object MonitorMetadataService :
                 e
             )
         } catch (e: Exception) {
-            throw AlertingException("Failed fetching index stats hurneyt 2", RestStatus.INTERNAL_SERVER_ERROR, e)
+            throw AlertingException("Failed fetching index stats", RestStatus.INTERNAL_SERVER_ERROR, e)
         }
-        log.info("hurneyt createFullRunContext END")
         return lastRunContext
     }
 

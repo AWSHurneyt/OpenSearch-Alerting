@@ -15,6 +15,7 @@ import org.opensearch.alerting.model.InputRunResults
 import org.opensearch.alerting.model.TriggerAfterKey
 import org.opensearch.alerting.opensearchapi.convertToMap
 import org.opensearch.alerting.opensearchapi.suspendUntil
+import org.opensearch.alerting.settings.AlertingSettings
 import org.opensearch.alerting.util.AggregationQueryRewriter
 import org.opensearch.alerting.util.CrossClusterMonitorUtils
 import org.opensearch.alerting.util.addUserBackendRolesFilter
@@ -117,22 +118,20 @@ class InputService(
                             prevResult?.aggTriggersAfterKey
                         )
                         results += searchResponse.convertToMap()
-                        logger.info("hurneyt SearchInput::results = $results")
                     }
                     is ClusterMetricsInput -> {
                         logger.debug("ClusterMetricsInput clusterMetricType: ${input.clusterMetricType}")
-                        logger.info("hurneyt ClusterMetricsInput::clustersAliases = ${input.clusters}")
-                        if (input.clusters.isNotEmpty()) {
-                            logger.info("hurneyt ClusterMetricsInput HAS REMOTE CLUSTERS")
+                        val remoteMonitoringEnabled = AlertingSettings.REMOTE_MONITORING_ENABLED.get(settings)
+                        // todo hurneyt make debug
+                        logger.info("ClusterMetricsInput remoteMonitoringEnabled: $remoteMonitoringEnabled")
+
+                        if (remoteMonitoringEnabled && input.clusters.isNotEmpty()) {
                             val responseMap = mutableMapOf<String, Map<String, Any>>()
                             client.threadPool().threadContext.stashContext().use {
                                 input.clusters.forEach { cluster ->
-                                    logger.info("hurneyt ClusterMetricsInput::cluster = $cluster")
                                     scope.launch {
                                         val targetClient = CrossClusterMonitorUtils.getClientForCluster(cluster, client, clusterService)
                                         val response = executeTransportAction(input, targetClient)
-                                        logger.info("hurneyt ClusterMetricsInput::response = ${response.toMap()}")
-
                                         // Not all supported API reference the cluster name in their response.
                                         // Mapping each response to the cluster name before adding to results.
                                         // Not adding this same logic for local-only monitors to avoid breaking existing monitors.
@@ -140,20 +139,14 @@ class InputService(
                                     }
                                 }
                             }
-                            logger.info("hurneyt ClusterMetricsInput WHILE START")
-                            while (responseMap.size < input.clusters.size) {
-                                logger.info("hurneyt ClusterMetricsInput WAITING...")
-                            }
-                            logger.info("hurneyt ClusterMetricsInput::responseMap = {}", responseMap)
+                            // todo hurneyt delete?
+//                            while (responseMap.size < input.clusters.size) {
+//                            }
                             results += responseMap
-                            logger.info("hurneyt ClusterMetricsInput::results 1 = {}", results)
-                            logger.info("hurneyt ClusterMetricsInput WHILE END")
                         } else {
-                            logger.info("hurneyt ClusterMetricsInput NO REMOTE CLUSTERS")
                             val response = executeTransportAction(input, client)
                             results += response.toMap()
                         }
-                        logger.info("hurneyt ClusterMetricsInput::results 2 = {}", results)
                     }
                     else -> {
                         throw IllegalArgumentException("Unsupported input type: ${input.name()}.")

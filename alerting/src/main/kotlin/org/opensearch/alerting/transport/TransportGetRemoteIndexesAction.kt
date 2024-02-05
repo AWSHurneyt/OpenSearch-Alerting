@@ -25,20 +25,16 @@ import org.opensearch.alerting.action.GetRemoteIndexesRequest
 import org.opensearch.alerting.action.GetRemoteIndexesResponse
 import org.opensearch.alerting.action.GetRemoteIndexesResponse.ClusterIndexes
 import org.opensearch.alerting.action.GetRemoteIndexesResponse.ClusterIndexes.ClusterIndex
-import org.opensearch.alerting.opensearchapi.convertToMap
 import org.opensearch.alerting.opensearchapi.suspendUntil
 import org.opensearch.alerting.settings.AlertingSettings
+import org.opensearch.alerting.settings.AlertingSettings.Companion.REMOTE_MONITORING_ENABLED
 import org.opensearch.alerting.util.AlertingException
 import org.opensearch.alerting.util.CrossClusterMonitorUtils
 import org.opensearch.client.Client
 import org.opensearch.cluster.service.ClusterService
 import org.opensearch.common.inject.Inject
 import org.opensearch.common.settings.Settings
-import org.opensearch.common.xcontent.XContentType
-import org.opensearch.commons.alerting.util.string
 import org.opensearch.core.xcontent.NamedXContentRegistry
-import org.opensearch.core.xcontent.ToXContent
-import org.opensearch.core.xcontent.XContentBuilder
 import org.opensearch.tasks.Task
 import org.opensearch.transport.TransportService
 import java.time.Duration
@@ -62,25 +58,27 @@ class TransportGetRemoteIndexesAction @Inject constructor(
 ),
     SecureTransportAction {
 
-    @Volatile
-    override var filterByEnabled = AlertingSettings.FILTER_BY_BACKEND_ROLES.get(settings)
+    @Volatile override var filterByEnabled = AlertingSettings.FILTER_BY_BACKEND_ROLES.get(settings)
+
+    @Volatile private var remoteMonitoringEnabled = REMOTE_MONITORING_ENABLED.get(settings)
+
+    init {
+        clusterService.clusterSettings.addSettingsUpdateConsumer(REMOTE_MONITORING_ENABLED) { remoteMonitoringEnabled = it }
+        listenFilterBySettingChange(clusterService)
+    }
 
     override fun doExecute(
         task: Task,
         request: GetRemoteIndexesRequest,
         actionListener: ActionListener<GetRemoteIndexesResponse>
     ) {
-        log.info("hurneyt TransportGetRemoteIndexesAction START")
-        val user = readUserFromThreadContext(client)
-        log.info("hurneyt TransportGetRemoteIndexesAction::user isNull = {}", user == null)
-        log.info(
-            "hurneyt TransportGetRemoteIndexesAction::user = {}",
-            user?.toXContent(XContentBuilder.builder(XContentType.JSON.xContent()), ToXContent.EMPTY_PARAMS)?.string()
-        )
+        // todo hurneyt change to debug
+        log.info("Remote monitoring enabled: {}", remoteMonitoringEnabled)
 
-        if (!validateUserBackendRoles(user, actionListener)) {
-            return
-        }
+        if (!remoteMonitoringEnabled) return
+
+        val user = readUserFromThreadContext(client)
+        if (!validateUserBackendRoles(user, actionListener)) return
 
         client.threadPool().threadContext.stashContext().use {
             scope.launch {
@@ -92,7 +90,6 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                     var resolveIndexResponse: ResolveIndexAction.Response? = null
                     try {
                         resolveIndexResponse = getRemoteClusters(CrossClusterMonitorUtils.parseIndexesForRemoteSearch(request.indexes, clusterService))
-                        log.info("hurneyt TransportGetRemoteIndexesAction::resolveIndexResponse = {}", resolveIndexResponse.convertToMap())
                     } catch (e: Exception) {
                         log.error("Failed to retrieve indexes for request $request", e)
                         actionListener.onFailure(AlertingException.wrap(e))
@@ -103,14 +100,10 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                         resolveIndexResponse.indices.forEach { resolvedIndexes.add(it.name) }
                         resolveIndexResponse.aliases.forEach { resolvedIndexes.add(it.name) }
                     }
-                    log.info("hurneyt TransportGetRemoteIndexesAction::resolvedIndexes = {}", resolvedIndexes)
 
                     val clusterIndexesMap = CrossClusterMonitorUtils.separateClusterIndexes(resolvedIndexes, clusterService)
-                    log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesMap = {}", clusterIndexesMap)
 
                     clusterIndexesMap.forEach { (clusterName, indexes) ->
-                        log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesMap clusterName = {}", clusterName)
-                        log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesMap indexes = {}", indexes)
                         val targetClient = CrossClusterMonitorUtils.getClientForCluster(clusterName, client, clusterService)
 
                         val startTime = Instant.now()
@@ -122,9 +115,6 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                             actionListener.onFailure(AlertingException.wrap(e))
                         }
                         val endTime = Instant.now()
-
-                        log.info("hurneyt TransportGetRemoteIndexesAction::clusterHealthResponse keys = {}", clusterHealthResponse?.indices?.keys)
-
                         val latency = Duration.between(startTime, endTime).toMillis()
 
                         var mappingsResponse: GetMappingsResponse? = null
@@ -140,7 +130,6 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                         val clusterIndexList = mutableListOf<ClusterIndex>()
                         if (clusterHealthResponse != null) {
                             indexes.forEach {
-                                log.info("hurneyt TransportGetRemoteIndexesAction::indexes.forEach it = {}", it)
                                 clusterIndexList.add(
                                     ClusterIndex(
                                         indexName = it,
@@ -161,8 +150,6 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                             )
                         )
                     }
-                    log.info("hurneyt TransportGetRemoteIndexesAction::clusterIndexesList = {}", clusterIndexesList)
-                    log.info("hurneyt TransportGetRemoteIndexesAction END")
                     actionListener.onResponse(GetRemoteIndexesResponse(clusterIndexes = clusterIndexesList))
                 }
             }
@@ -170,7 +157,6 @@ class TransportGetRemoteIndexesAction @Inject constructor(
     }
 
     private suspend fun getRemoteClusters(parsedIndexes: List<String>): ResolveIndexAction.Response {
-        log.info("hurneyt getRemoteClusters::parsedIndexes = {}", parsedIndexes)
         val resolveRequest = ResolveIndexAction.Request(
             parsedIndexes.toTypedArray(),
             ResolveIndexAction.Request.DEFAULT_INDICES_OPTIONS
