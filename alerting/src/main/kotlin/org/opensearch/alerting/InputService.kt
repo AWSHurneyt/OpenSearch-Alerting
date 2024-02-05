@@ -154,8 +154,8 @@ class InputService(
 //                                        // Not adding this same logic for local-only monitors to avoid breaking existing monitors.
 //                                        responseMap[cluster] = response.toMap()
 //                                    }
-                                    results += responseMap
                                 }
+                                results += responseMap
                             }
                             // todo hurneyt delete?
 //                            while (responseMap.size < input.clusters.size) {
