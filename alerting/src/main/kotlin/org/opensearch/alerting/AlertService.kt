@@ -175,7 +175,10 @@ class AlertService(
         if (result is ClusterMetricsTriggerRunResult)
             result.clusterTriggerResults.forEach {
                 if (it.triggered) {
+                    // Add an empty list if one isn't already present
                     if (triggeredClusters.isNullOrEmpty()) triggeredClusters = mutableListOf()
+
+                    // Add the cluster to the list of triggered clusters
                     triggeredClusters!!.add(it.cluster)
                 }
             }
