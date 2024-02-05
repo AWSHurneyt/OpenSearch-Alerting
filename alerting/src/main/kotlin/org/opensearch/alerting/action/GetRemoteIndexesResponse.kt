@@ -97,7 +97,7 @@ class GetRemoteIndexesResponse : ActionResponse, ToXContentObject {
 
         data class ClusterIndex(
             val indexName: String,
-            val indexHealth: ClusterHealthStatus,
+            val indexHealth: ClusterHealthStatus?,
             val mappings: MappingMetadata?
         ) : ToXContentObject, Writeable {
 

@@ -144,7 +144,7 @@ class TransportGetRemoteIndexesAction @Inject constructor(
                                 clusterIndexList.add(
                                     ClusterIndex(
                                         indexName = it,
-                                        indexHealth = clusterHealthResponse.indices[it]!!.status,
+                                        indexHealth = clusterHealthResponse.indices[it]?.status,
                                         mappings = mappingsResponse?.mappings?.get(it)
                                     )
                                 )
